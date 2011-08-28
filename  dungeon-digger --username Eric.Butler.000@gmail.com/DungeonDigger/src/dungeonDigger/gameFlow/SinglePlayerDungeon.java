@@ -42,6 +42,8 @@ public class SinglePlayerDungeon extends BasicGameState {
 		if( inputs.isKeyDown(Keyboard.KEY_1) ) {
 			if( !gen1Toggled ) {
 				this.gen.generateDungeon1(99, 99, 0.25, hallsDensity);
+				myPlayer.setPlayerXCoord( (int)gen.getEntranceCoords().x );
+				myPlayer.setPlayerYCoord( (int)gen.getEntranceCoords().y );
 				gen1Toggled = true;
 			}
 		} else { gen1Toggled = false; }

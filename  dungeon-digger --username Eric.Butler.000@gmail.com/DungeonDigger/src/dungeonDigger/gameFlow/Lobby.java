@@ -7,12 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.newdawn.slick.Color;
@@ -27,19 +22,11 @@ import org.newdawn.slick.gui.TextField;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
-import com.esotericsoftware.kryonet.Client;
-import com.esotericsoftware.kryonet.Connection;
-import com.esotericsoftware.kryonet.Listener;
-import com.esotericsoftware.kryonet.Server;
-
 import dungeonDigger.network.ConnectionState;
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.ChatPacket;
 import dungeonDigger.network.Network.GameJoinPacket;
-import dungeonDigger.network.Network.GameStartPacket;
 import dungeonDigger.network.Network.LoginRequest;
-import dungeonDigger.network.Network.LoginResponse;
-import dungeonDigger.network.Network.PlayerInfoPacket;
 import dungeonDigger.network.Network.SignOff;
 import dungeonDigger.network.Network.TextPacket;
 
@@ -176,7 +163,8 @@ public class Lobby extends BasicGameState implements MouseListener{
 			game.enterState(DungeonDigger.MAINMENU);
 		}
 		
-		if( DungeonDigger.STATE == ConnectionState.LAUNCHINGGAME ) {
+		if( DungeonDigger.STATE == ConnectionState.LAUNCHINGGAME || DungeonDigger.STATE == ConnectionState.JOININGGAME) {
+			logger.info("Entering into MultiplayerDungeon state.");
 			game.enterState( DungeonDigger.CHOSEN_GAME_STATE );
 		}
 	}
@@ -200,7 +188,6 @@ public class Lobby extends BasicGameState implements MouseListener{
 		try { 
 			DungeonDigger.SERVER.start();
 			DungeonDigger.SERVER.bind(4444);
-			
 			// Listener log setup
 			DungeonDigger.SERVER.addListener( new Network.ServerListener() );
 		} catch( IOException e ) { e.printStackTrace(); }
@@ -285,7 +272,7 @@ public class Lobby extends BasicGameState implements MouseListener{
 	// Capture clicks and see if they clicked the start button
 	@Override
 	public void mouseClicked(int button, int x, int y, int clickCount){
-		if( x >= 375 && x <= 500 && y >= 400 && y <= 435 ) {
+		if( x >= 375 && x <= 500 && y >= 400 && y <= 435 && isServer ) {
 			DungeonDigger.CHOSEN_GAME_STATE = DungeonDigger.MULTIPLAYERDUNGEON;
 			DungeonDigger.STATE = ConnectionState.LAUNCHINGGAME;
 			DungeonDigger.SERVER.sendToAllTCP(new GameJoinPacket( DungeonDigger.CHOSEN_GAME_STATE ));

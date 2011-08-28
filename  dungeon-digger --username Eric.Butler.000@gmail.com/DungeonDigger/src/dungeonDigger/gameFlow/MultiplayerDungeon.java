@@ -10,10 +10,11 @@ import org.newdawn.slick.geom.Vector2f;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
+import com.esotericsoftware.kryonet.Connection;
+
 import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.network.ConnectionState;
 import dungeonDigger.network.Network.GameStartPacket;
-import dungeonDigger.network.Network.WholeMapPacket;
 
 public class MultiplayerDungeon extends BasicGameState {
 	private boolean isServer;
@@ -48,23 +49,27 @@ public class MultiplayerDungeon extends BasicGameState {
 			}
 			
 			// Calculate the top left most open spot
-			startPos = CLIENT_VIEW.getEntrance();
+			startPos = CLIENT_VIEW.getEntranceCoords();
 			// Set me there
 			DungeonDigger.myCharacter.setPlayerXCoord((int)startPos.x);
 			DungeonDigger.myCharacter.setPlayerYCoord((int)startPos.y);
 			
 			// Send the map file, then tell the players where to start, and to start
-			logger.info("Sending out start packet");
-			WholeMapPacket map = new WholeMapPacket();
-			map.dungeon = CLIENT_VIEW.dungeon;
-			DungeonDigger.SERVER.sendToAllTCP(map); 
-			DungeonDigger.SERVER.sendToAllTCP(new GameStartPacket((int)startPos.x, (int)startPos.y));
+			logger.info("Sending tile packets.");
+			for( Connection c : DungeonDigger.SERVER.getConnections() ) {
+				c.setTimeout(0);
+			}
+			CLIENT_VIEW.serverSendMap();
 			
 			// Update state
+			logger.info("Change State to hosting.");
 			DungeonDigger.STATE = ConnectionState.HOSTINGGAME;
 		} else {		
 			logger.info("We're a client.");
 			isServer = false;
+			
+			CLIENT_VIEW = new DungeonGenerator();
+			CLIENT_VIEW.initializeDungeon(100, 100);
 		}
 	}
 	
@@ -73,7 +78,7 @@ public class MultiplayerDungeon extends BasicGameState {
 		switch(DungeonDigger.STATE) {
 			case JOININGGAME: break;
 			case LAUNCHINGGAME: break;			
-			case INGAME:					
+			case INGAME:	
 			case HOSTINGGAME:
 				DungeonDigger.myCharacter.update(container, delta);				
 				break;
@@ -92,8 +97,14 @@ public class MultiplayerDungeon extends BasicGameState {
 				g.drawString("Generating map and synching players...", 75, 75);
 				break;
 			case INGAME:
-			case HOSTINGGAME:
+			case HOSTINGGAME:				
+				// Translate graphics to preserve coordinates of map elements and follow the player
+				g.translate(-DungeonDigger.myCharacter.getPlayerXCoord()+container.getWidth()/2, -DungeonDigger.myCharacter.getPlayerYCoord()+container.getHeight()/2);
+				
 				CLIENT_VIEW.renderDungeon(container, g);
+				
+				// Undo translation to render moving components (player, HUD)
+				g.translate(DungeonDigger.myCharacter.getPlayerXCoord()-container.getWidth()/2, DungeonDigger.myCharacter.getPlayerYCoord()-container.getHeight()/2);
 				break;
 		}
 	}

@@ -12,13 +12,13 @@ import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.geom.Point;
 import org.newdawn.slick.geom.Rectangle;
-import org.newdawn.slick.geom.ShapeRenderer;
 import org.newdawn.slick.geom.Vector2f;
 
 import dungeonDigger.gameFlow.Direction;
 import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.gameFlow.NetworkPlayer;
-import dungeonDigger.gameFlow.Player;
+import dungeonDigger.network.Network;
+import dungeonDigger.network.Network.GameStartPacket;
 
 public class DungeonGenerator {
 	public GameSquare[][] dungeon;
@@ -75,14 +75,14 @@ public class DungeonGenerator {
 		boolean inView = false;
 		int count = 0;
 		// Draw map
-		for(int i = 0; i < dungeonHeight; i++) {
-			for(int j = 0; j < dungeonWidth; j++) {
+		for(int row = 0; row < dungeonHeight; row++) {
+			for(int col = 0; col < dungeonWidth; col++) {
 				inView = false;
 				// Get the cornerpoints of the tile in question
-				corners.add(new Point(j*ratioX, i*ratioY));
-				corners.add(new Point((j+1)*ratioX, i*ratioY));
-				corners.add(new Point((j+1)*ratioX, (i+1)*ratioY));
-				corners.add(new Point(j*ratioX, (i+1)*ratioY));
+				corners.add(new Point(col*ratioX, row*ratioY));
+				corners.add(new Point((col+1)*ratioX, row*ratioY));
+				corners.add(new Point((col+1)*ratioX, (row+1)*ratioY));
+				corners.add(new Point(col*ratioX, (row+1)*ratioY));
 				
 				// See if it's in our screen
 				for( Point p : corners ) {
@@ -97,12 +97,12 @@ public class DungeonGenerator {
 				// If it's not, don't render it
 				if( !inView ) { continue; }
 				count++;
-				if( dungeon[i][j].getTileLetter().equalsIgnoreCase("X") ) {
-					dirtWallImage.draw(j*ratioX, i*ratioY);
-					//ShapeRenderer.draw(new Rectangle(j*ratioX, i*ratioY, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
-				}else if( dungeon[i][j].getTileLetter().equalsIgnoreCase("O") ) {
-					dirtFloorImage.draw(j*ratioX, i*ratioY);
-					//ShapeRenderer.draw(new Rectangle(j*ratioX, i*ratioY, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
+				if( dungeon[row][col].getTileLetter().equalsIgnoreCase("X") ) {
+					dirtWallImage.draw(col*ratioX, row*ratioY);
+					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
+				}else if( dungeon[row][col].getTileLetter().equalsIgnoreCase("O") ) {
+					dirtFloorImage.draw(col*ratioX, row*ratioY);
+					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
 				}			
 			}
 		}
@@ -118,7 +118,7 @@ public class DungeonGenerator {
 	 * @param w
 	 * @return The newly initialized array.
 	 */
-	private void initializeDungeon( int h, int w ) {
+	public void initializeDungeon( int h, int w ) {
 		GameSquare[][] result = new GameSquare[h][w];
 		this.roomList.clear();
 		
@@ -159,7 +159,7 @@ public class DungeonGenerator {
 			}
 		}		
 		
-		findEntrance();
+		findEntranceSquare();
 		
 		// Hallway generation
 		for( double d : hallwayDensity ) {
@@ -420,6 +420,15 @@ public class DungeonGenerator {
 		return false;
 	}
 	
+	public void serverSendMap() {
+		for(int i = 0; i < this.dungeonWidth; i++) {
+			for(int n = 0; n < this.dungeonHeight; n++) {
+				DungeonDigger.SERVER.sendToAllTCP(new Network.TileResponse(n, i, dungeon[n][i]));
+			}
+		}
+		
+		DungeonDigger.SERVER.sendToAllTCP(new GameStartPacket((int)getEntranceCoords().x, (int)getEntranceCoords().y));
+	}
 	/**
 	 * Returns true if one of the bordering square is owned by the passed owner room
 	 * @param row
@@ -488,11 +497,12 @@ public class DungeonGenerator {
 		return goodToGo;
 	}
 	
-	public void findEntrance() {		
+	public void findEntranceSquare() {		
 		for(int z = 0; z < Math.min(dungeonHeight, dungeonWidth); z++) {
 			for(int i = 0; i <= z; i++) {
 				if( dungeon[z-i][0+i].getTileLetter("O") ) {
-					entrance = new Vector2f(z-i, 0+i);
+					// Set x to column and y to row
+					entrance = new Vector2f(0+i, z-i);
 					return;
 				}
 			}
@@ -534,8 +544,17 @@ public class DungeonGenerator {
 	
 	private enum BorderCheck { ORTHOGONAL, DIAGONAL, ALL }
 
-	public Vector2f getEntrance() {
+	/**
+	 * @return Array coords of start point
+	 */
+	public Vector2f getEntranceSqure() {
 		return entrance;
+	}
+	/**
+	 * @return Array coords of start point
+	 */
+	public Vector2f getEntranceCoords() {
+		return new Vector2f(entrance.x * ratioX, entrance.y * ratioY + ratioY/2);
 	}
 
 	public void setMap(GameSquare[][] dungeon2) {

@@ -14,6 +14,7 @@ import com.esotericsoftware.kryonet.Connection;
 
 import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.network.ConnectionState;
+import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.GameStartPacket;
 
 public class MultiplayerDungeon extends BasicGameState {
@@ -60,7 +61,7 @@ public class MultiplayerDungeon extends BasicGameState {
 				c.setTimeout(0);
 			}
 			CLIENT_VIEW.serverSendMap();
-			
+			DungeonDigger.SERVER.sendToAllTCP(new Network.PlayerListPacket(CLIENT_VIEW.getPlayerList()));
 			// Update state
 			logger.info("Change State to hosting.");
 			DungeonDigger.STATE = ConnectionState.HOSTINGGAME;

@@ -59,6 +59,7 @@ public class Lobby extends BasicGameState implements MouseListener{
 				player.setPlayerYCoord(0);
 				DungeonDigger.CHARACTERBANK.put(DungeonDigger.ACCOUNT_NAME, player);
 			}
+			DungeonDigger.ACTIVESESSIONNAMES.add(DungeonDigger.ACCOUNT_NAME);
 			DungeonDigger.myCharacter = DungeonDigger.CHARACTERBANK.get(DungeonDigger.ACCOUNT_NAME);
 			startAsServer();
 		}
@@ -188,6 +189,7 @@ public class Lobby extends BasicGameState implements MouseListener{
 		try { 
 			DungeonDigger.SERVER.start();
 			DungeonDigger.SERVER.bind(4444);
+			
 			// Listener log setup
 			DungeonDigger.SERVER.addListener( new Network.ServerListener() );
 		} catch( IOException e ) { e.printStackTrace(); }

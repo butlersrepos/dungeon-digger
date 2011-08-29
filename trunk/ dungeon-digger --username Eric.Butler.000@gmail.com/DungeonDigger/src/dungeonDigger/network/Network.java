@@ -2,6 +2,7 @@ package dungeonDigger.network;
 
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -19,11 +20,12 @@ import dungeonDigger.gameFlow.NetworkPlayer;
 public class Network {
 	static public final int port = 54555;
 	private Logger logger = Logger.getLogger("DungeonDigger.Network");
-
+	
 	// This registers objects that are going to be sent over the network.
 	static public void register(EndPoint endPoint) {
 		Kryo kryo = endPoint.getKryo();
-		Log.set(Log.LEVEL_TRACE);
+		// TODO: LOGGER SETTINGS
+		//Log.set(Log.LEVEL_TRACE);
 		kryo.register(TextPacket.class);
 		kryo.register(ChatPacket.class);
 		kryo.register(LoginRequest.class);
@@ -32,7 +34,9 @@ public class Network {
 		kryo.register(GameStartPacket.class);
 		kryo.register(GameJoinPacket.class);
 		kryo.register(PlayerInfoPacket.class);
+		kryo.register(PlayerListPacket.class);
 		kryo.register(NetworkPlayer.class);
+		kryo.register(NetworkPlayer[].class);
 		kryo.register(TilesResponse.class);
 		kryo.register(TilesRequest.class);
 		kryo.register(TileResponse.class);
@@ -44,7 +48,7 @@ public class Network {
 		kryo.register(PlayerMovementRequest.class);
 		kryo.register(PlayerMovementResponse.class);
 	}
-
+	//////////////////////////////////////
 	// Traffic, packets, responses, etc //
 	//////////////////////////////////////
 	static abstract class Response {
@@ -117,6 +121,14 @@ public class Network {
 	static public class PlayerInfoPacket {
 		public NetworkPlayer player;
 	}
+	static public class PlayerListPacket {
+		public Vector<NetworkPlayer> players;
+		public PlayerListPacket(){ }
+		public PlayerListPacket(Vector<NetworkPlayer> players){
+			this.players = players;
+		}
+		
+	}
 	static public class PlayerMovementUpdate {
 		public String player;
 		public int x, y; 
@@ -175,10 +187,7 @@ public class Network {
 		
 		@Override
 		public void received(Connection connection, Object object) {
-			for( Connection c : DungeonDigger.SERVER.getConnections() ) {
-				System.out.println(c.getID());
-			}
-		
+			logger.setLevel(Level.OFF);
 			if( object instanceof LoginRequest ) {
 				logger.info("Recieved login request");
 				LoginRequest login = (LoginRequest)object;
@@ -256,9 +265,10 @@ public class Network {
 	static public class ClientListener extends Listener {
 		Logger logger = Logger.getLogger("ClientListener");
 		
+		
 		@Override
 		public void received(Connection connection, Object object) {
-			System.out.println("Got a " + object.getClass() + " obect.");
+			logger.setLevel(Level.OFF);
 			if (object instanceof ChatPacket) {
 				logger.info("Recieved a chat packet");
 				DungeonDigger.CHATS.add((ChatPacket) object);
@@ -301,7 +311,6 @@ public class Network {
 				MultiplayerDungeon.CLIENT_VIEW.playerList = ((WholeMapPacket)object).players;
 			}
 			if( object instanceof TileResponse ) {
-				logger.info("Recieved a tile info packet");
 				TileResponse tilePacket = (TileResponse)object;
 				MultiplayerDungeon.CLIENT_VIEW.dungeon[tilePacket.row][tilePacket.col].setTileLetter(tilePacket.tile.getTileLetter());
 			}
@@ -326,10 +335,17 @@ public class Network {
 					int x = DungeonDigger.myCharacter.getProposedPlayerX() / MultiplayerDungeon.CLIENT_VIEW.getRatioX();
 					int y = DungeonDigger.myCharacter.getProposedPlayerY() / MultiplayerDungeon.CLIENT_VIEW.getRatioY();
 					logger.info("Sending tile request for " + x + ", " + y);
-					connection.sendTCP(new TilesRequest(x, y));
 				}
 				logger.info("Resetting pendingValidation");
 				DungeonDigger.myCharacter.setPendingValidation( false );
+			}
+			if( object instanceof PlayerListPacket ) {
+				logger.info("Recieved a player list packet.");
+				PlayerListPacket packet = (PlayerListPacket)object;
+				for( NetworkPlayer player : packet.players ) {
+					if( player.getName().equalsIgnoreCase(DungeonDigger.ACCOUNT_NAME)) { continue; }
+					MultiplayerDungeon.CLIENT_VIEW.playerList.add(player);
+				}
 			}
 		}
 	}

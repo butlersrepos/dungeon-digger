@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
@@ -74,7 +75,9 @@ public class DungeonGenerator {
 		HashSet<Point> corners = new HashSet<Point>(4);
 		boolean inView = false;
 		int count = 0;
-		// Draw map
+		//////////////
+		// Draw map //
+		//////////////
 		for(int row = 0; row < dungeonHeight; row++) {
 			for(int col = 0; col < dungeonWidth; col++) {
 				inView = false;
@@ -105,6 +108,30 @@ public class DungeonGenerator {
 					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
 				}			
 			}
+		}
+		for( NetworkPlayer player : this.getPlayerList() ) {
+			if( player == guy ) { continue; }
+			inView = false;
+			// Get the cornerpoints of the player in question
+			corners.add(new Point(player.getPlayerXCoord(), player.getPlayerYCoord()));
+			corners.add(new Point((player.getPlayerXCoord()+player.getIcon().getWidth()), player.getPlayerYCoord()));
+			corners.add(new Point((player.getPlayerXCoord()+player.getIcon().getWidth()), (player.getPlayerYCoord()+player.getIcon().getHeight())));
+			corners.add(new Point(player.getPlayerXCoord(), (player.getPlayerYCoord()+player.getIcon().getHeight())));
+			
+			// See if it's in our screen
+			for( Point p : corners ) {
+				if( viewPort.contains(p.getX(), p.getY())) {
+					inView = true;
+					corners.clear();
+					break;
+				}
+			}
+			corners.clear();
+			
+			// If it's not, don't render it
+			if( !inView ) { continue; }
+			
+			g.drawImage(player.getIcon().getFlippedCopy( player.isFlippedLeft(), false), player.getPlayerXCoord(), player.getPlayerYCoord());
 		}
 		// Draw player
 		g.drawImage(guy.getIcon().getFlippedCopy( guy.isFlippedLeft(), false), guy.getPlayerXCoord(), guy.getPlayerYCoord());
@@ -423,6 +450,7 @@ public class DungeonGenerator {
 	public void serverSendMap() {
 		for(int i = 0; i < this.dungeonWidth; i++) {
 			for(int n = 0; n < this.dungeonHeight; n++) {
+				Logger.getAnonymousLogger().info("Sending a tile packet to clients.");
 				DungeonDigger.SERVER.sendToAllTCP(new Network.TileResponse(n, i, dungeon[n][i]));
 			}
 		}

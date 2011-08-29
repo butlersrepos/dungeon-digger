@@ -122,7 +122,6 @@ public class NetworkPlayer {
 			this.setPendingValidation(true);
 		} 
 		if( pendingValidation ) {
-			logger.info("Sending input packet INGAME.");
 			DungeonDigger.CLIENT.sendTCP(new Network.PlayerMovementRequest(name, proposedPlayerX, proposedPlayerY));
 		}		
 	}

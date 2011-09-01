@@ -1,12 +1,13 @@
 package dungeonDigger.gameFlow;
 
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.logging.Logger;
 
+import org.lwjgl.LWJGLUtil;
 import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
@@ -45,6 +46,8 @@ public class DungeonDigger extends StateBasedGame {
 	// Start game
 	public static void main(String[] args) {
 		try {
+			System.setProperty("org.lwjgl.librarypath", new File(new File(System.getProperty("user.dir"), "native"), LWJGLUtil.getPlatformName()).getAbsolutePath());
+			System.setProperty("net.java.games.input.librarypath", System.getProperty("org.lwjgl.librarypath"));
 			AppGameContainer app = new AppGameContainer(new DungeonDigger("Dungeon Digger"));
 			app.setDisplayMode(640, 640, false);
 			app.setTargetFrameRate(40);

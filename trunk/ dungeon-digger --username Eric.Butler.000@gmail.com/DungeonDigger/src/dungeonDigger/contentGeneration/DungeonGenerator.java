@@ -14,6 +14,7 @@ import org.newdawn.slick.SlickException;
 import org.newdawn.slick.geom.Point;
 import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.geom.Vector2f;
+import org.newdawn.slick.util.ResourceLoader;
 
 import dungeonDigger.gameFlow.Direction;
 import dungeonDigger.gameFlow.DungeonDigger;
@@ -30,23 +31,25 @@ public class DungeonGenerator {
 	private Vector<Room> roomList = new Vector<Room>();
 	private HashMap<Integer, Room> roomDefinitionMap = new HashMap<Integer, Room>();
 	private boolean isInitialized = false;	
-	private Image roomWallImage, dirtFloorImage, roomFloorImage, dirtWallImage;
+	private Image roomWallImage, dirtFloorImage, roomFloorImage, dirtWallImage, entranceImage;
 	private static final int ratioX = 99;
 	private static final int ratioY = 82;
 	private Vector2f entrance;
 	
+	private enum BorderCheck { ORTHOGONAL, DIAGONAL, ALL }
+	
 	public DungeonGenerator() {		
 		try {
-			roomWallImage = new Image("src/dungeonDigger/resources/dirt floor 100x120.png");
-			dirtFloorImage = new Image("src/dungeonDigger/resources/Dirt Block.png");
-			roomFloorImage = new Image("src/dungeonDigger/resources/dirt floor 100x120.png");
-			dirtWallImage = new Image("src/dungeonDigger/resources/Wall Block Tall.png");
+			roomWallImage = new Image( ResourceLoader.getResourceAsStream("dirt floor 100x120.png"), "dirt floor 100x120.png", false);
+			dirtFloorImage =  new Image( ResourceLoader.getResourceAsStream("Dirt Block.png"), "Dirt Block.png", false);
+			roomFloorImage =  new Image( ResourceLoader.getResourceAsStream("dirt floor 100x120.png"), "dirt floor 100x120.png", false);
+			dirtWallImage = new Image( ResourceLoader.getResourceAsStream("Wall Block Tall.png"), "Wall Block Tall.png", false);
+			entranceImage = new Image( ResourceLoader.getResourceAsStream("Stone Block.png"), "Stone Block.png", false);			
 		} catch( SlickException se){ }
 		
 		{
 			Room room1 = new Room();
 			room1.setName("Chamber");
-			room1.setColor(Color.darkGray);
 			room1.setRoomID(1);
 			room1.setWidth(3);
 			room1.setHeight(3);
@@ -54,7 +57,6 @@ public class DungeonGenerator {
 			
 			Room room2 = new Room();
 			room2.setName("Dining Hall");
-			room2.setColor(Color.darkGray);
 			room2.setRoomID(2);
 			room2.setWidth(5);
 			room2.setHeight(5);
@@ -335,14 +337,6 @@ public class DungeonGenerator {
 			}
 		}
 	}
-			
-	public void processChanges()  {
-		for(int i = 0; i < dungeonHeight; i++) {
-			for(int j = 0; j < dungeonWidth; j++) {
-				dungeon[i][j].change();
-			}
-		}
-	}
 	
 	/**
 	 * This method finds out how many identical cells this cell has bordering it
@@ -461,7 +455,7 @@ public class DungeonGenerator {
 	 * Returns true if one of the bordering square is owned by the passed owner room
 	 * @param row
 	 * @param col
-	 * @param method
+	 * @param method BorderCheck enum value
 	 * @param owner
 	 * @return
 	 */
@@ -491,11 +485,12 @@ public class DungeonGenerator {
 		}
 		return result / (this.dungeonHeight * this.dungeonWidth);
 	}
+	
 	/**@param dir Direction Enum, cardinal direction.
 	 * @param playerY Array number[0 - dungeonWidth-1], not pixel or grid count.
 	 * @param playerX Array number[0 - dungeonHeight-1], not pixel or grid count.
 	 * @param distance Speed or distance to attempt to move.
-	 * @return The amount of distance the character could move in that direction from 0 to distance passed in. */
+	 * @return The amount of distance the character could move in that direction from 0 to distance(speed) passed in. */
 	public int canMove(Direction dir, int playerY, int playerX, int distance) {		
 		int goodToGo = 0;
 		for(int i = 1; i <= distance; i++) {
@@ -525,7 +520,7 @@ public class DungeonGenerator {
 		return goodToGo;
 	}
 	
-	public void findEntranceSquare() {		
+	private void findEntranceSquare() {		
 		for(int z = 0; z < Math.min(dungeonHeight, dungeonWidth); z++) {
 			for(int i = 0; i <= z; i++) {
 				if( dungeon[z-i][0+i].getTileLetter("O") ) {
@@ -569,8 +564,6 @@ public class DungeonGenerator {
 	public int getRatioY() {
 		return ratioY;
 	}
-	
-	private enum BorderCheck { ORTHOGONAL, DIAGONAL, ALL }
 
 	/**
 	 * @return Array coords of start point

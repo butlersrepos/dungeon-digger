@@ -15,10 +15,8 @@ import com.esotericsoftware.kryonet.Connection;
 import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.network.ConnectionState;
 import dungeonDigger.network.Network;
-import dungeonDigger.network.Network.GameStartPacket;
 
 public class MultiplayerDungeon extends BasicGameState {
-	private boolean isServer;
 	private Vector2f startPos;
 	// Used for both, "CLIENT" = viewable interface
 	public static DungeonGenerator CLIENT_VIEW;
@@ -36,7 +34,6 @@ public class MultiplayerDungeon extends BasicGameState {
 		logger.info("Entering MultiplayerDungeon...");
 		if( DungeonDigger.STATE == ConnectionState.LAUNCHINGGAME ) {
 			logger.info("We're a server.");
-			isServer = true;
 			
 			// Get a new dungeon
 			logger.info("Making dungeon");
@@ -67,7 +64,6 @@ public class MultiplayerDungeon extends BasicGameState {
 			DungeonDigger.STATE = ConnectionState.HOSTINGGAME;
 		} else {		
 			logger.info("We're a client.");
-			isServer = false;
 			
 			CLIENT_VIEW = new DungeonGenerator();
 			CLIENT_VIEW.initializeDungeon(100, 100);

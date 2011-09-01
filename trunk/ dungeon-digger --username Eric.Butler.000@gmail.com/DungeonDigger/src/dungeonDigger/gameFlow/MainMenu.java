@@ -1,6 +1,8 @@
 package dungeonDigger.gameFlow;
 
 import java.awt.Font;
+import java.io.InputStream;
+import java.net.URL;
 
 import org.lwjgl.input.Keyboard;
 import org.newdawn.slick.Color;
@@ -15,6 +17,8 @@ import org.newdawn.slick.gui.ComponentListener;
 import org.newdawn.slick.gui.TextField;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
+import org.newdawn.slick.util.ResourceLoader;
+import org.newdawn.slick.util.ResourceLocation;
 
 import dungeonDigger.network.ConnectionState;
 
@@ -99,7 +103,7 @@ public class MainMenu extends BasicGameState {
 	
 	public void loadImages() {
 		try {
-			DungeonDigger.IMAGES.put("dwarf1", new Image("src/dungeonDigger/resources/dwarf1.png"));
+			DungeonDigger.IMAGES.put("dwarf1", new Image( ResourceLoader.getResourceAsStream("dwarf1.png"), "dwarf1", false));
 		} catch (SlickException e) {
 			e.printStackTrace();
 		}

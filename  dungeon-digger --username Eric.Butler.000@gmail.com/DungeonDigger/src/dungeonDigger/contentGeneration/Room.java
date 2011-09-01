@@ -1,17 +1,13 @@
 package dungeonDigger.contentGeneration;
 
-import org.newdawn.slick.Color;
-
 public class Room {
 	private String name;
 	private int roomID;
-	private Color color;
 	private boolean[][] layout;
 	private int height, width, row, column;
 	
 	public Room copy() {
 		Room result = new Room();
-		result.color = color;
 		result.column = column;
 		result.height = height;
 		result.layout = layout;
@@ -45,18 +41,6 @@ public class Room {
 	 */
 	public void setRoomID(int roomID) {
 		this.roomID = roomID;
-	}
-	/**
-	 * @return the color
-	 */
-	public Color getColor() {
-		return color;
-	}
-	/**
-	 * @param color the color to set
-	 */
-	public void setColor(Color color) {
-		this.color = color;
 	}
 	/**
 	 * @return the layout

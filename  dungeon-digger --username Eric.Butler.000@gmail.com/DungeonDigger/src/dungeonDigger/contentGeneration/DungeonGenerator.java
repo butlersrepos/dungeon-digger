@@ -6,7 +6,6 @@ import java.util.Random;
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Image;
@@ -47,6 +46,8 @@ public class DungeonGenerator {
 			entranceImage = new Image( ResourceLoader.getResourceAsStream("Stone Block.png"), "Stone Block.png", false);			
 		} catch( SlickException se){ }
 		
+		// Define our room templates
+		// TODO: Move to a file and import on startup? then patches can simply update external file
 		{
 			Room room1 = new Room();
 			room1.setName("Chamber");
@@ -76,7 +77,7 @@ public class DungeonGenerator {
 												container.getWidth() + guy.getIcon().getWidth(), container.getHeight() + guy.getIcon().getHeight());
 		HashSet<Point> corners = new HashSet<Point>(4);
 		boolean inView = false;
-		int count = 0;
+		
 		//////////////
 		// Draw map //
 		//////////////
@@ -93,7 +94,6 @@ public class DungeonGenerator {
 				for( Point p : corners ) {
 					if( viewPort.contains(p.getX(), p.getY())) {
 						inView = true;
-						corners.clear();
 						break;
 					}
 				}
@@ -101,14 +101,16 @@ public class DungeonGenerator {
 				
 				// If it's not, don't render it
 				if( !inView ) { continue; }
-				count++;
-				if( dungeon[row][col].getTileLetter().equalsIgnoreCase("X") ) {
+
+				if( dungeon[row][col].getTileLetter() == 'W' ) {
 					dirtWallImage.draw(col*ratioX, row*ratioY);
 					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
-				}else if( dungeon[row][col].getTileLetter().equalsIgnoreCase("O") ) {
+				} else if( dungeon[row][col].getTileLetter() == 'O' ) {
 					dirtFloorImage.draw(col*ratioX, row*ratioY);
 					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
-				}			
+				} else if( dungeon[row][col].getTileLetter() == 'E' || dungeon[row][col].getTileLetter() == 'X' ) {
+					entranceImage.draw(col*ratioX, row*ratioY);
+				} 
 			}
 		}
 		for( NetworkPlayer player : this.getPlayerList() ) {
@@ -142,7 +144,7 @@ public class DungeonGenerator {
 	}
 	
 	/**
-	 * Wipes the current dungeon and fills a new one with walls ('X')
+	 * Wipes the current dungeon and fills a new one with walls ('W')
 	 * @param h
 	 * @param w
 	 * @return The newly initialized array.
@@ -157,8 +159,7 @@ public class DungeonGenerator {
 		for(int i = 0; i < h; i++) {
 			for(int j = 0; j < w; j++){
 				result[i][j] = new GameSquare();
-				result[i][j].setTileLetter("X");
-				result[i][j].setTileImage(dirtWallImage);
+				result[i][j].setTileLetter('W');
 			}
 		}
 		this.setInitialized(true);
@@ -188,7 +189,8 @@ public class DungeonGenerator {
 			}
 		}		
 		
-		findEntranceSquare();
+		designateEntranceSquare();
+		designateExitSquare();
 		
 		// Hallway generation
 		for( double d : hallwayDensity ) {
@@ -205,7 +207,7 @@ public class DungeonGenerator {
 	 * @param width Columns
 	 * @param iterations Big ass number, 50000?
 	 * @param neighbors Default = 4
-	 * @param closedness 0.00 - 1.00 chance a square is 'X' 
+	 * @param closedness 0.00 - 1.00 chance a square is 'W' 
 	 * @param specifier true or false, no idea how this affects?
 	 */
 	public void generateDungeon2(int height, int width, int iterations, int neighbors, double closedness, boolean specifier) {
@@ -214,11 +216,9 @@ public class DungeonGenerator {
 		for(int x = 0; x < width; x++) {
 			for(int y = 0; y < height; y++) {
 				if(  r.nextDouble() < closedness ) {
-					this.dungeon[y][x].setTileLetter( "X" );
-					this.dungeon[y][x].setTileImage(dirtWallImage);
+					this.dungeon[y][x].setTileLetter('W');
 				} else {
-					this.dungeon[y][x].setTileLetter( "O" );
-					this.dungeon[y][x].setTileImage(dirtFloorImage);
+					this.dungeon[y][x].setTileLetter('O');
 				}
 			}
 		}
@@ -228,12 +228,10 @@ public class DungeonGenerator {
 			int h = r.nextInt(height);
 			
 			if (wallNeighbors(h, w) > neighbors) {
-            	this.dungeon[h][w].setTileLetter(specifier ? "X" : "O");
-            	this.dungeon[h][w].setTileImage(specifier ? dirtWallImage : dirtFloorImage);
+            	this.dungeon[h][w].setTileLetter(specifier ? 'W' : 'O');
             }
             else {
-            	this.dungeon[h][w].setTileLetter(specifier ? "O" : "X");
-            	this.dungeon[h][w].setTileImage(specifier ? dirtFloorImage : dirtWallImage);
+            	this.dungeon[h][w].setTileLetter(specifier ? 'O' : 'W');
             }
 		}
 	}
@@ -309,20 +307,18 @@ public class DungeonGenerator {
 							}
 							GameSquare inspectee = this.dungeon[currentRow+y][currentColumn+x];
 							// Checks owners to determine our actions, stop if its not startRoom or our hallway
-							if( inspectee.getTileLetter().equalsIgnoreCase("O") &&
+							if( inspectee.getTileLetter() == 'O' &&
 									inspectee.getBelongsTo() != startRoom &&
 									inspectee.getBelongsTo() != currentHallway) {
 								// If we're still next to the start room, only claim if the triggering square is opposite from the startRoom
 								// otherwise the triggering hall is probably connecting to the startRoom
 								if( checkBordersOwners(currentRow, currentColumn, BorderCheck.ORTHOGONAL, startRoom).size() > 0) {
 									if( this.dungeon[currentRow+y*-1][currentColumn+x*-1].getBelongsTo() == startRoom ) {
-										currentSquare.setTileLetter("O");
-										currentSquare.setTileImage(dirtFloorImage);
+										currentSquare.setTileLetter('O');
 										currentSquare.setBelongsTo(currentHallway);
 									}
 								} else {
-									currentSquare.setTileLetter("O");
-									currentSquare.setTileImage(dirtFloorImage);
+									currentSquare.setTileLetter('O');
 									currentSquare.setBelongsTo(currentHallway);
 								}
 								halls++;
@@ -330,8 +326,7 @@ public class DungeonGenerator {
 							}
 						}
 					}
-					currentSquare.setTileLetter("O");
-					currentSquare.setTileImage(dirtFloorImage);
+					currentSquare.setTileLetter('O');
 					currentSquare.setBelongsTo(currentHallway);
 				}
 			}
@@ -347,12 +342,12 @@ public class DungeonGenerator {
 	 */
 	public int friendlyNeighbors(int row, int col) {
 		int result = 0;
-		String me = dungeon[row][col].getTileLetter();
+		char me = dungeon[row][col].getTileLetter();
 		
 		try {
 			for(int y = -1; y < 2; y++) {
 				for(int x = -1; x < 2; x++) {
-					if( this.dungeon[col+y][row+x].getTileLetter().equalsIgnoreCase(me) ) {
+					if( this.dungeon[col+y][row+x].getTileLetter() == me ) {
 						result++;
 					}
 				}
@@ -414,8 +409,7 @@ public class DungeonGenerator {
 		// TODO: apply real properties instead of just an 'O'
 		for(int i = 0;i < roomDefinitionMap.get(roomID).getWidth(); i++) {
 			for(int n = 0;n < roomDefinitionMap.get(roomID).getHeight(); n++) {
-				this.dungeon[row+n][column+i].setTileLetter("O");
-				this.dungeon[row+n][column+i].setTileImage(roomFloorImage);
+				this.dungeon[row+n][column+i].setTileLetter('O');
 				this.dungeon[row+n][column+i].setBelongsTo(newRoom);
 			}
 		}
@@ -434,7 +428,7 @@ public class DungeonGenerator {
 			return false;
 		}
 		
-		if( this.dungeon[X][Y].getTileLetter().equalsIgnoreCase("X") ) {
+		if( this.dungeon[X][Y].getTileLetter() == 'W' ) {
 			return true;
 		}
 		
@@ -478,7 +472,7 @@ public class DungeonGenerator {
 		
 		for(int i = 0; i < this.dungeonWidth; i++) {
 			for(int n = 0; n < this.dungeonHeight; n++) {
-				if( this.dungeon[n][i].getTileLetter().equalsIgnoreCase("O") ) {
+				if( this.dungeon[n][i].getTileLetter() == 'O' ) {
 					result++;
 				}
 			}			
@@ -511,7 +505,7 @@ public class DungeonGenerator {
 				int checkX = (int) (point.x / ratioX);
 				int checkY = (int) (point.y / ratioY);
 				
-				if( this.dungeon[checkY][checkX].getTileLetter("X") ) {
+				if( this.dungeon[checkY][checkX].getTileLetter('W') ) {
 					return goodToGo;
 				}
 			}
@@ -520,10 +514,11 @@ public class DungeonGenerator {
 		return goodToGo;
 	}
 	
-	private void findEntranceSquare() {		
+	private void designateEntranceSquare() {		
 		for(int z = 0; z < Math.min(dungeonHeight, dungeonWidth); z++) {
 			for(int i = 0; i <= z; i++) {
-				if( dungeon[z-i][0+i].getTileLetter("O") ) {
+				if( dungeon[z-i][0+i].getTileLetter('O') ) {
+					dungeon[z-i][0+i].setTileLetter('E');
 					// Set x to column and y to row
 					entrance = new Vector2f(0+i, z-i);
 					return;
@@ -531,6 +526,19 @@ public class DungeonGenerator {
 			}
 		}
 	}
+	
+	private void designateExitSquare() {		
+		boolean found = false;
+		while( !found ) {
+			int roomNumber = r.nextInt(this.roomList.size());
+			Room room = this.roomList.get(roomNumber);
+			if( room.getRow() > (0.75) * dungeonHeight && room.getColumn() > (0.75) * dungeonWidth ) {				
+				dungeon[room.getRow() + room.getHeight()/2][room.getColumn() + room.getWidth()/2].setTileLetter('X');
+				found = true;
+			}
+		}
+	}
+	
 	/***********************
 	 * GETTERS AND SETTERS *
 	 ***********************/

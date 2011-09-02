@@ -10,7 +10,6 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.EndPoint;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import com.esotericsoftware.minlog.Log;
 
 import dungeonDigger.contentGeneration.GameSquare;
 import dungeonDigger.gameFlow.DungeonDigger;
@@ -19,7 +18,7 @@ import dungeonDigger.gameFlow.NetworkPlayer;
 
 public class Network {
 	static public final int port = 54555;
-	private Logger logger = Logger.getLogger("DungeonDigger.Network");
+	//private Logger logger = Logger.getLogger("DungeonDigger.Network");
 	
 	// This registers objects that are going to be sent over the network.
 	static public void register(EndPoint endPoint) {
@@ -243,9 +242,8 @@ public class Network {
 				PlayerMovementRequest packet = (PlayerMovementRequest)object;
 				int x = packet.x / MultiplayerDungeon.CLIENT_VIEW.getRatioX();
 				int y = packet.y / MultiplayerDungeon.CLIENT_VIEW.getRatioY();
-				logger.info("Recieved a player movement request packet for " + packet.player + " to move to " +
-						"X:" + packet.x + " Y:" + packet.y);
-				boolean passable = MultiplayerDungeon.CLIENT_VIEW.dungeon[y][x].getTileLetter("O");
+				logger.info("Recieved a player movement request packet for " + packet.player + " to move to " + "X:" + packet.x + " Y:" + packet.y);
+				boolean passable = MultiplayerDungeon.CLIENT_VIEW.dungeon[y][x].isPassable();
 				logger.info("Position was passable: " + passable);
 				if( passable ) {					
 					for( NetworkPlayer player : MultiplayerDungeon.CLIENT_VIEW.playerList) {

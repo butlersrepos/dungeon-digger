@@ -46,17 +46,7 @@ public class NetworkPlayer {
 		// Entirely different logic and flow if we're server or client
 		// Client - must send packets and validate movements
 		// Server - simply moves and updates all players
-		switch( DungeonDigger.STATE ) {
-			case HOSTINGGAME:
-				serverSidePlaying(container, delta, inputs);				
-				break;
-			case INGAME:	
-				if( !this.isPendingValidation() ) {
-					clientSidePlaying(container, delta, inputs);					
-				}
-				break;
-		}		
-		
+		handleMovement(container, delta, inputs);		
 	}
 	
 	public void serverSidePlaying(GameContainer container, int delta, Input inputs) {
@@ -94,36 +84,79 @@ public class NetworkPlayer {
 		}
 	}
 	
-	public void clientSidePlaying(GameContainer container, int delta, Input inputs) {
+	public void handleMovement(GameContainer container, int delta, Input inputs) {
 		int movement;
+		// Reset our proposed coords so that one doesn't lag behind the other
+		this.setProposedPlayerX( this.getPlayerXCoord() );	
+		this.setProposedPlayerY( this.getPlayerYCoord() );
+		
 		if (inputs.isKeyDown(Keyboard.KEY_UP) && 
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, playerYCoord, playerXCoord, speed))  > 0) {
 			this.setProposedPlayerY( this.getPlayerYCoord() - movement );	
-			this.setPendingValidation(true);
+			pendingValidation = true;
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_DOWN) &&
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, playerYCoord, playerXCoord, speed))  > 0) { 
 			this.setProposedPlayerY( this.getPlayerYCoord() + movement );
-			this.setPendingValidation(true);
+			pendingValidation = true;
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_LEFT) &&
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, playerYCoord, playerXCoord, speed))  > 0) { 
 			setFlippedLeft(true);	
 			this.setProposedPlayerX( this.getPlayerXCoord() - movement );
-			this.setPendingValidation(true);
+			pendingValidation = true;
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_RIGHT) &&
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, playerYCoord, playerXCoord, speed))  > 0) {
 			setFlippedLeft(false);
 			this.setProposedPlayerX( this.getPlayerXCoord() + movement );
-			this.setPendingValidation(true);
+			pendingValidation = true;
 		} 
+		// If we move then handle it based on the server scenario we're in
 		if( pendingValidation ) {
-			DungeonDigger.CLIENT.sendTCP(new Network.PlayerMovementRequest(name, proposedPlayerX, proposedPlayerY));
+			switch(DungeonDigger.STATE) {
+				case INGAME:
+					DungeonDigger.CLIENT.sendTCP(new Network.PlayerMovementRequest(name, proposedPlayerX, proposedPlayerY));
+					break;
+				case HOSTINGGAME:
+					PlayerMovementUpdate packet = new Network.PlayerMovementUpdate(name, playerXCoord, playerYCoord);
+					DungeonDigger.SERVER.sendToAllTCP(packet);
+					// Allow to flow into SINGLEPLAYER condition
+				case SINGLEPLAYER:
+					this.setPlayerXCoord( this.getProposedPlayerX() );
+					this.setPlayerYCoord( this.getProposedPlayerY() );
+					pendingValidation = false;
+					break;
+			}
 		}		
+	}
+	
+	public void soloPlaying(GameContainer container, int delta, Input inputs) {
+		int movement;
+		if (inputs.isKeyDown(Keyboard.KEY_UP) && 
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, playerYCoord, playerXCoord, speed))  > 0) {
+			this.setPlayerYCoord( this.getPlayerYCoord() - movement );		
+		} 
+
+		if (inputs.isKeyDown(Keyboard.KEY_DOWN) &&
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, playerYCoord, playerXCoord, speed))  > 0) { 
+			this.setPlayerYCoord( this.getPlayerYCoord() + movement );
+		} 
+
+		if (inputs.isKeyDown(Keyboard.KEY_LEFT) &&
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, playerYCoord, playerXCoord, speed))  > 0) { 
+			setFlippedLeft(true);	
+			this.setPlayerXCoord( this.getPlayerXCoord() - movement );
+		} 
+
+		if (inputs.isKeyDown(Keyboard.KEY_RIGHT) &&
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, playerYCoord, playerXCoord, speed))  > 0) {
+			setFlippedLeft(false);
+			this.setPlayerXCoord( this.getPlayerXCoord() + movement );
+		} 
 	}
 	/***********************
 	 * GETTERS AND SETTERS *

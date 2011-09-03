@@ -94,13 +94,14 @@ public class MainMenu extends BasicGameState {
 				if( inputs.isKeyDown(Keyboard.KEY_1) ) { DungeonDigger.STATE = ConnectionState.SINGLEPLAYER; }
 				if( inputs.isKeyDown(Keyboard.KEY_3) ) { DungeonDigger.STATE = ConnectionState.LOGGINGON; }
 				if( inputs.isKeyDown(Keyboard.KEY_4) ) { DungeonDigger.STATE = ConnectionState.SETTINGUP; }
+				if( inputs.isKeyDown(Keyboard.KEY_ESCAPE) ) { System.exit(0); }
 				break;
 		}
 	}
 	
 	public void loadImages() {
 		try {
-			DungeonDigger.IMAGES.put("dwarf1", new Image( ResourceLoader.getResourceAsStream("dwarf1.png"), "dwarf1", false));
+			DungeonDigger.IMAGES.put("dwarf1", new Image( "dwarf1.png", new Color(255, 0, 255)));
 		} catch (SlickException e) {
 			e.printStackTrace();
 		}

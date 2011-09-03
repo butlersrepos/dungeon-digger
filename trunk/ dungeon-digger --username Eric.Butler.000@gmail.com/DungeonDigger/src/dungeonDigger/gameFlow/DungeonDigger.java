@@ -31,6 +31,7 @@ public class DungeonDigger extends StateBasedGame {
 	public static final int SINGLEPLAYERDUNGEON = 1;
 	public static final int MULTIPLAYERDUNGEON = 2;
 	public static String ACCOUNT_NAME;
+	public static String IP_CONNECT;
 	public static int MAX_MESSAGE_LENGTH = 50;
 	public static ConnectionState STATE;
 	public static HashMap<String, Image> IMAGES = new HashMap<String, Image>();

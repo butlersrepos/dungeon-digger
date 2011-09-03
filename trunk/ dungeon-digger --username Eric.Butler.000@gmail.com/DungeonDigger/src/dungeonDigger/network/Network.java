@@ -10,6 +10,7 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.EndPoint;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
+import com.esotericsoftware.minlog.Log;
 
 import dungeonDigger.contentGeneration.GameSquare;
 import dungeonDigger.gameFlow.DungeonDigger;
@@ -48,7 +49,7 @@ public class Network {
 		kryo.register(PlayerMovementResponse.class);
 	}
 	
-//////////////////////////////////
+	//////////////////////////////////
 	// Listeners that the game uses //
 	//////////////////////////////////
 	static public class ServerListener extends Listener {

@@ -65,7 +65,7 @@ public class Lobby extends BasicGameState implements MouseListener{
 		}
 		if( DungeonDigger.STATE == ConnectionState.CONNECTING ) {
 			Network.register(DungeonDigger.CLIENT);
-			startAsClient();
+			startAsClient(DungeonDigger.IP_CONNECT);
 		}
 		
 		// Create our chat box
@@ -195,10 +195,10 @@ public class Lobby extends BasicGameState implements MouseListener{
 		} catch( IOException e ) { e.printStackTrace(); }
 	}
 	
-	public void startAsClient() {
+	public void startAsClient(String ip) {
 		try {
 			DungeonDigger.CLIENT.start();
-			DungeonDigger.CLIENT.connect(5000, "127.0.0.1", 4444);
+			DungeonDigger.CLIENT.connect(5000, ip, 4444);
 									
 			DungeonDigger.CLIENT.addListener(new Network.ClientListener());
 			

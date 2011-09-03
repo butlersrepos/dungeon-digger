@@ -64,7 +64,7 @@ public class MultiplayerDungeon extends BasicGameState {
 			DungeonDigger.STATE = ConnectionState.HOSTINGGAME;
 		} else {		
 			logger.info("We're a client.");
-			
+			DungeonDigger.CLIENT.setTimeout(0);
 			CLIENT_VIEW = new DungeonGenerator();
 			CLIENT_VIEW.initializeDungeon(100, 100);
 		}

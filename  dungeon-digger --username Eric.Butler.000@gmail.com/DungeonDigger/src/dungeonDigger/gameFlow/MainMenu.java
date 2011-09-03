@@ -20,9 +20,9 @@ import org.newdawn.slick.util.ResourceLoader;
 import dungeonDigger.network.ConnectionState;
 
 public class MainMenu extends BasicGameState {
-	TextField tf;
+	TextField tf, iptf;
 	boolean listening, connecting, triggered, go;
-	String accountName;
+	String accountName, ip;
 	
 	@Override
 	public int getID() { return 0; }
@@ -42,17 +42,41 @@ public class MainMenu extends BasicGameState {
 			@Override
 			public void componentActivated(AbstractComponent source) {
 				accountName = tf.getText().trim().toLowerCase();
-				if( accountName.length() > 0 ) {
-					DungeonDigger.ACCOUNT_NAME = accountName;
-					switch(DungeonDigger.STATE) {
-						case LOGGINGON:
-							DungeonDigger.STATE = ConnectionState.CONNECTING; 
-							break;
-						case SETTINGUP:
-							DungeonDigger.STATE = ConnectionState.LISTENING; 
-							break;
-					}
-				}
+				ip = iptf.getText().trim();
+				
+				DungeonDigger.ACCOUNT_NAME = accountName;
+				DungeonDigger.IP_CONNECT = ip;
+				switch(DungeonDigger.STATE) {
+					case LOGGINGON:
+						DungeonDigger.STATE = ConnectionState.CONNECTING; 
+						break;
+					case SETTINGUP:
+						DungeonDigger.STATE = ConnectionState.LISTENING; 
+						break;
+				}				
+			}
+		});
+		iptf = new TextField(container, font, 315, 125, 150, 25);
+		iptf.setTextColor(Color.black);
+		iptf.setBorderColor(Color.red);
+		iptf.setCursorVisible(true);
+		iptf.setBackgroundColor(Color.white);
+		iptf.addListener(new ComponentListener() {
+			@Override
+			public void componentActivated(AbstractComponent source) {
+				accountName = tf.getText().trim().toLowerCase();
+				ip = iptf.getText().trim();
+				
+				DungeonDigger.ACCOUNT_NAME = accountName;
+				DungeonDigger.IP_CONNECT = ip;
+				switch(DungeonDigger.STATE) {
+					case LOGGINGON:
+						DungeonDigger.STATE = ConnectionState.CONNECTING; 
+						break;
+					case SETTINGUP:
+						DungeonDigger.STATE = ConnectionState.LISTENING; 
+						break;
+				}	
 			}
 		});
 	}
@@ -67,6 +91,9 @@ public class MainMenu extends BasicGameState {
 				g.drawString("4. HOST SERVER", 280, 270);
 				break;
 			case LOGGINGON:
+				g.setColor(Color.white);
+				g.drawString("Enter IP address: ", 75, 125);
+				iptf.render(container, g);
 			case SETTINGUP:
 				g.setColor(Color.white);
 				g.drawString("Enter your account name: ", 75, 75);

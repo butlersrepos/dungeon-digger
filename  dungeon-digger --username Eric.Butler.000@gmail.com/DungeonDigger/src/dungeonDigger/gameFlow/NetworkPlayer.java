@@ -1,11 +1,14 @@
 package dungeonDigger.gameFlow;
 
+import java.util.LinkedList;
+import java.util.Stack;
 import java.util.logging.Logger;
 
 import org.lwjgl.input.Keyboard;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
+import org.newdawn.slick.geom.Point;
 
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.PlayerMovementUpdate;
@@ -31,6 +34,7 @@ public class NetworkPlayer {
 	transient private boolean flippedLeft, pendingValidation;					
 	transient private Image icon;
 	transient Logger logger = Logger.getLogger("NetworkPlayer");
+	transient LinkedList<Point> movementList = new LinkedList<Point>();
 	
 	public NetworkPlayer() {
 		if( iconName != null ) {		
@@ -49,7 +53,7 @@ public class NetworkPlayer {
 		handleMovement(container, delta, inputs);		
 	}
 	
-	public void serverSidePlaying(GameContainer container, int delta, Input inputs) {
+	/*public void serverSidePlaying(GameContainer container, int delta, Input inputs) {
 		int movement;
 		if (inputs.isKeyDown(Keyboard.KEY_UP) && 
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, playerYCoord, playerXCoord, speed))  > 0) {
@@ -82,7 +86,7 @@ public class NetworkPlayer {
 			DungeonDigger.SERVER.sendToAllTCP(packet);
 			pendingValidation = false;
 		}
-	}
+	}*/
 	
 	public void handleMovement(GameContainer container, int delta, Input inputs) {
 		int movement;
@@ -93,33 +97,39 @@ public class NetworkPlayer {
 		if (inputs.isKeyDown(Keyboard.KEY_UP) && 
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, playerYCoord, playerXCoord, speed))  > 0) {
 			this.setProposedPlayerY( this.getPlayerYCoord() - movement );	
-			pendingValidation = true;
+			//pendingValidation = true;
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_DOWN) &&
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, playerYCoord, playerXCoord, speed))  > 0) { 
 			this.setProposedPlayerY( this.getPlayerYCoord() + movement );
-			pendingValidation = true;
+			//pendingValidation = true;
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_LEFT) &&
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, playerYCoord, playerXCoord, speed))  > 0) { 
 			setFlippedLeft(true);	
 			this.setProposedPlayerX( this.getPlayerXCoord() - movement );
-			pendingValidation = true;
+			//pendingValidation = true;
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_RIGHT) &&
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, playerYCoord, playerXCoord, speed))  > 0) {
 			setFlippedLeft(false);
 			this.setProposedPlayerX( this.getPlayerXCoord() + movement );
-			pendingValidation = true;
+			//pendingValidation = true;
 		} 
 		// If we move then handle it based on the server scenario we're in
-		if( pendingValidation ) {
+		//if( pendingValidation ) {
 			switch(DungeonDigger.STATE) {
 				case INGAME:
+					if( this.movementList.size() == 0 ) {
+						this.movementList.add( new Point( this.getPlayerXCoord(), this.getPlayerYCoord() ) );
+					}
+					this.movementList.add( new Point( this.getProposedPlayerX(), this.getProposedPlayerY() ) );
 					DungeonDigger.CLIENT.sendTCP(new Network.PlayerMovementRequest(name, proposedPlayerX, proposedPlayerY));
+					this.setPlayerXCoord( this.getProposedPlayerX() );
+					this.setPlayerYCoord( this.getProposedPlayerY() );
 					break;
 				case HOSTINGGAME:
 					PlayerMovementUpdate packet = new Network.PlayerMovementUpdate(name, playerXCoord, playerYCoord);
@@ -131,7 +141,7 @@ public class NetworkPlayer {
 					pendingValidation = false;
 					break;
 			}
-		}		
+		//}		
 	}
 	
 	public void soloPlaying(GameContainer container, int delta, Input inputs) {
@@ -255,5 +265,13 @@ public class NetworkPlayer {
 
 	public boolean isPendingValidation() {
 		return pendingValidation;
+	}
+
+	public LinkedList<Point> getMovementList() {
+		return movementList;
+	}
+
+	public void setMovementList(LinkedList<Point> movementList) {
+		this.movementList = movementList;
 	}
 }

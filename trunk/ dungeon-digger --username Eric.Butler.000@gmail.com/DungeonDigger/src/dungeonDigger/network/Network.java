@@ -5,6 +5,8 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.newdawn.slick.geom.Point;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.EndPoint;
@@ -194,12 +196,20 @@ public class Network {
 			}
 			if( object instanceof PlayerMovementResponse ) {
 				PlayerMovementResponse packet = (PlayerMovementResponse)object;
-				logger.info("Recieved a player movement response packet " + packet.response);
+				logger.info("Received a player movement response packet " + packet.response);
 				if( packet.response ) {					
+					if( DungeonDigger.myCharacter.getMovementList().size() > 1 ) {
+						DungeonDigger.myCharacter.getMovementList().remove();
+					} 
 					DungeonDigger.myCharacter.setPlayerXCoord( DungeonDigger.myCharacter.getProposedPlayerX() );
 					DungeonDigger.myCharacter.setPlayerYCoord( DungeonDigger.myCharacter.getProposedPlayerY() );
 					logger.info("Moved us to X:" + DungeonDigger.myCharacter.getPlayerXCoord() + " Y:" + DungeonDigger.myCharacter.getPlayerYCoord());
 				} else {					
+					if( DungeonDigger.myCharacter.getMovementList().size() > 1 ) {
+						Point lastKnownGood = DungeonDigger.myCharacter.getMovementList().get(0);
+						DungeonDigger.myCharacter.setPlayerXCoord((int)lastKnownGood.getX());
+						DungeonDigger.myCharacter.setPlayerYCoord((int)lastKnownGood.getY());
+					} 
 					int x = DungeonDigger.myCharacter.getProposedPlayerX() / MultiplayerDungeon.CLIENT_VIEW.getRatioX();
 					int y = DungeonDigger.myCharacter.getProposedPlayerY() / MultiplayerDungeon.CLIENT_VIEW.getRatioY();
 					logger.info("Sending tile request for " + x + ", " + y);

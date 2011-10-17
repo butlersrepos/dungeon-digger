@@ -18,7 +18,7 @@ import dungeonDigger.network.Network;
 
 public class MultiplayerDungeon extends BasicGameState {
 	private Vector2f startPos;
-	// Used for both, "CLIENT" = viewable interface
+	// Used for dungeon data of both, aside: "CLIENT" = viewable interface
 	public static DungeonGenerator CLIENT_VIEW;
 	private Logger logger = Logger.getLogger("DungeonDigger.MultiplayerDungeon");
 	

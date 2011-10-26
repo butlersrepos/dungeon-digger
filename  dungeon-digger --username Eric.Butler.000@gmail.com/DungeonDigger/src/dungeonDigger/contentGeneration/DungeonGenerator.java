@@ -12,6 +12,7 @@ import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.geom.Point;
 import org.newdawn.slick.geom.Rectangle;
+import org.newdawn.slick.geom.ShapeRenderer;
 import org.newdawn.slick.geom.Vector2f;
 import org.newdawn.slick.util.ResourceLoader;
 
@@ -104,10 +105,10 @@ public class DungeonGenerator {
 
 				if( dungeon[row][col].getTileLetter() == 'W' ) {
 					dirtWallImage.draw(col*ratioX, row*ratioY);
-					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
+					ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
 				} else if( dungeon[row][col].getTileLetter() == 'O' ) {
 					dirtFloorImage.draw(col*ratioX, row*ratioY);
-					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
+					ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
 				} else if( dungeon[row][col].getTileLetter() == 'E' || dungeon[row][col].getTileLetter() == 'X' ) {
 					entranceImage.draw(col*ratioX, row*ratioY);
 				} 
@@ -139,7 +140,7 @@ public class DungeonGenerator {
 		}
 		// Draw player
 		g.drawImage(guy.getIcon().getFlippedCopy( guy.isFlippedLeft(), false), guy.getPlayerXCoord(), guy.getPlayerYCoord());
-		//ShapeRenderer.draw(new Rectangle(guy.getPlayerXCoord(), guy.getPlayerYCoord()+30, guy.getIcon().getWidth(), guy.getIcon().getHeight()-30));
+		ShapeRenderer.draw(guy.getCollisionBox());
 
 	}
 	
@@ -485,15 +486,15 @@ public class DungeonGenerator {
 	 * @param playerX Array number[0 - dungeonHeight-1], not pixel or grid count.
 	 * @param distance Speed or distance to attempt to move.
 	 * @return The amount of distance the character could move in that direction from 0 to distance(speed) passed in. */
-	public int canMove(Direction dir, int playerY, int playerX, int distance) {		
+	public int canMove(Direction dir, Rectangle collisionBox, int distance) {		
 		int goodToGo = 0;
 		for(int i = 1; i <= distance; i++) {
 			// Assemble suggested new position bounds to check		
 			HashSet<Vector2f> collisionPoints = new HashSet<Vector2f>();
-			collisionPoints.add( new Vector2f(playerX+dir.adjX()*i, playerY+dir.adjY()*i) );
-			collisionPoints.add( new Vector2f(playerX+60+dir.adjX()*i, playerY+dir.adjY()*i) );
-			collisionPoints.add( new Vector2f(playerX+dir.adjX()*i, playerY+60+dir.adjY()*i) );
-			collisionPoints.add( new Vector2f(playerX+60+dir.adjX()*i, playerY+60+dir.adjY()*i) );
+			collisionPoints.add( new Vector2f(collisionBox.getMinX()+dir.adjX()*i, collisionBox.getMinY()+dir.adjY()*i) );
+			collisionPoints.add( new Vector2f(collisionBox.getMaxX()+dir.adjX()*i, collisionBox.getMinY()+dir.adjY()*i) );
+			collisionPoints.add( new Vector2f(collisionBox.getMinX()+dir.adjX()*i, collisionBox.getMaxY()+dir.adjY()*i) );
+			collisionPoints.add( new Vector2f(collisionBox.getMaxX()+dir.adjX()*i, collisionBox.getMaxY()+dir.adjY()*i) );
 			
 			for( Vector2f point : collisionPoints ) {
 				// Out of bounds check

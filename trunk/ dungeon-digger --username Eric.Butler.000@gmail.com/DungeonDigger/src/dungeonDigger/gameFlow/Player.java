@@ -6,6 +6,7 @@ import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
+import org.newdawn.slick.geom.Rectangle;
 
 import dungeonDigger.contentGeneration.DungeonGenerator;
 
@@ -36,21 +37,21 @@ public class Player {
 		///////////////
 		
 		if (inputs.isKeyDown(Keyboard.KEY_UP)) { 
-			setPlayerYCoord( getPlayerYCoord() - myLevel.canMove( Direction.NORTH, playerYCoord, playerXCoord, getSpeed() ) ); 
+			setPlayerYCoord( getPlayerYCoord() - myLevel.canMove( Direction.NORTH, this.getCollisionBox(), getSpeed() ) ); 
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_DOWN)) { 
-			setPlayerYCoord( getPlayerYCoord() + myLevel.canMove( Direction.SOUTH, playerYCoord, playerXCoord, getSpeed() ) ); 
+			setPlayerYCoord( getPlayerYCoord() + myLevel.canMove( Direction.SOUTH, this.getCollisionBox(), getSpeed() ) ); 
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_LEFT)) { 
 			setFlippedLeft(true);		
-			setPlayerXCoord( getPlayerXCoord() - myLevel.canMove( Direction.WEST, playerYCoord, playerXCoord, getSpeed() ) ); 
+			setPlayerXCoord( getPlayerXCoord() - myLevel.canMove( Direction.WEST, this.getCollisionBox(), getSpeed() ) ); 
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_RIGHT)) {
 			setFlippedLeft(false);
-			setPlayerXCoord( getPlayerXCoord() + myLevel.canMove( Direction.EAST, playerYCoord, playerXCoord, getSpeed() ) ); 
+			setPlayerXCoord( getPlayerXCoord() + myLevel.canMove( Direction.EAST, this.getCollisionBox(), getSpeed() ) ); 
 		} 
 		
 		// Check inputs
@@ -151,5 +152,8 @@ public class Player {
 
 	public String getName() {
 		return name;
+	}
+	public Rectangle getCollisionBox() {
+		return new Rectangle(this.playerXCoord, this.playerYCoord + this.icon.getHeight()/2, this.icon.getWidth(), this.icon.getHeight()/2);
 	}
 }

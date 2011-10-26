@@ -9,6 +9,7 @@ import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.geom.Point;
+import org.newdawn.slick.geom.Rectangle;
 
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.PlayerMovementUpdate;
@@ -53,41 +54,6 @@ public class NetworkPlayer {
 		handleMovement(container, delta, inputs);		
 	}
 	
-	/*public void serverSidePlaying(GameContainer container, int delta, Input inputs) {
-		int movement;
-		if (inputs.isKeyDown(Keyboard.KEY_UP) && 
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, playerYCoord, playerXCoord, speed))  > 0) {
-			this.setPlayerYCoord( this.getPlayerYCoord() - movement );		
-			pendingValidation = true;
-		} 
-
-		if (inputs.isKeyDown(Keyboard.KEY_DOWN) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, playerYCoord, playerXCoord, speed))  > 0) { 
-			this.setPlayerYCoord( this.getPlayerYCoord() + movement );
-			pendingValidation = true;
-		} 
-
-		if (inputs.isKeyDown(Keyboard.KEY_LEFT) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, playerYCoord, playerXCoord, speed))  > 0) { 
-			setFlippedLeft(true);	
-			this.setPlayerXCoord( this.getPlayerXCoord() - movement );
-			pendingValidation = true;
-		} 
-
-		if (inputs.isKeyDown(Keyboard.KEY_RIGHT) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, playerYCoord, playerXCoord, speed))  > 0) {
-			setFlippedLeft(false);
-			this.setPlayerXCoord( this.getPlayerXCoord() + movement );
-			pendingValidation = true;
-		} 
-		// Inform all clients of the move
-		if( pendingValidation ) {
-			PlayerMovementUpdate packet = new Network.PlayerMovementUpdate(name, playerXCoord, playerYCoord);
-			DungeonDigger.SERVER.sendToAllTCP(packet);
-			pendingValidation = false;
-		}
-	}*/
-	
 	public void handleMovement(GameContainer container, int delta, Input inputs) {
 		int movement;
 		// Reset our proposed coords so that one doesn't lag behind the other
@@ -95,26 +61,26 @@ public class NetworkPlayer {
 		this.setProposedPlayerY( this.getPlayerYCoord() );
 		
 		if (inputs.isKeyDown(Keyboard.KEY_UP) && 
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, playerYCoord, playerXCoord, speed))  > 0) {
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getCollisionBox(), speed))  > 0) {
 			this.setProposedPlayerY( this.getPlayerYCoord() - movement );	
 			//pendingValidation = true;
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_DOWN) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, playerYCoord, playerXCoord, speed))  > 0) { 
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getCollisionBox(), speed))  > 0) { 
 			this.setProposedPlayerY( this.getPlayerYCoord() + movement );
 			//pendingValidation = true;
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_LEFT) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, playerYCoord, playerXCoord, speed))  > 0) { 
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getCollisionBox(), speed))  > 0) { 
 			setFlippedLeft(true);	
 			this.setProposedPlayerX( this.getPlayerXCoord() - movement );
 			//pendingValidation = true;
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_RIGHT) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, playerYCoord, playerXCoord, speed))  > 0) {
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getCollisionBox(), speed))  > 0) {
 			setFlippedLeft(false);
 			this.setProposedPlayerX( this.getPlayerXCoord() + movement );
 			//pendingValidation = true;
@@ -147,23 +113,23 @@ public class NetworkPlayer {
 	public void soloPlaying(GameContainer container, int delta, Input inputs) {
 		int movement;
 		if (inputs.isKeyDown(Keyboard.KEY_UP) && 
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, playerYCoord, playerXCoord, speed))  > 0) {
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getCollisionBox(), speed))  > 0) {
 			this.setPlayerYCoord( this.getPlayerYCoord() - movement );		
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_DOWN) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, playerYCoord, playerXCoord, speed))  > 0) { 
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getCollisionBox(), speed))  > 0) { 
 			this.setPlayerYCoord( this.getPlayerYCoord() + movement );
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_LEFT) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, playerYCoord, playerXCoord, speed))  > 0) { 
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getCollisionBox(), speed))  > 0) { 
 			setFlippedLeft(true);	
 			this.setPlayerXCoord( this.getPlayerXCoord() - movement );
 		} 
 
 		if (inputs.isKeyDown(Keyboard.KEY_RIGHT) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, playerYCoord, playerXCoord, speed))  > 0) {
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getCollisionBox(), speed))  > 0) {
 			setFlippedLeft(false);
 			this.setPlayerXCoord( this.getPlayerXCoord() + movement );
 		} 
@@ -273,5 +239,9 @@ public class NetworkPlayer {
 
 	public void setMovementList(LinkedList<Point> movementList) {
 		this.movementList = movementList;
+	}
+	
+	public Rectangle getCollisionBox() {
+		return new Rectangle(this.playerXCoord, this.playerYCoord + this.icon.getHeight()/2, this.icon.getWidth(), this.icon.getHeight()/2);
 	}
 }

@@ -47,7 +47,6 @@ public class Lobby extends BasicGameState implements MouseListener{
 		if( DungeonDigger.STATE == ConnectionState.LISTENING ) {
 			isServer = true;
 			Network.register(DungeonDigger.SERVER);
-			loadCharacterFiles();
 			// Load our character up
 			if( DungeonDigger.CHARACTERBANK.get(DungeonDigger.ACCOUNT_NAME) == null ) {
 				NetworkPlayer player = new NetworkPlayer();
@@ -207,68 +206,6 @@ public class Lobby extends BasicGameState implements MouseListener{
 			logger.info("Sent a login request");
 			DungeonDigger.CLIENT.sendTCP(request);
 		} catch ( IOException e ) {e.printStackTrace();}
-	}
-	
-	/**
-	 * Load all .csf files into memory for players' characters
-	 */
-	public void loadCharacterFiles() {
-		BufferedReader in;
-		File file = new File("characters");
-		if( !file.isDirectory() ) { file.mkdir(); }
-		else {
-			// Create filter to ignore all but csf files
-			FilenameFilter charFilesOnly = new FilenameFilter() {
-				@Override
-				public boolean accept(File dir, String name) {
-					if( name.endsWith(".csf") ) { return true; }
-					return false;
-				}				
-			};
-			// Try to load each player file
-			for( File f : file.listFiles( charFilesOnly ) ){
-				try {
-					in = new BufferedReader(new FileReader(f));
-					NetworkPlayer loadee = new NetworkPlayer();
-					String line = in.readLine();
-					boolean duplicant = false;
-					
-					if( !line.equalsIgnoreCase("[CHARACTER]") ) {
-						logger.info("Character file: " + f.getName() + " seems corrupt. Skipping.");
-						continue;
-					}
-					
-					// Setup player object
-					StringBuffer property = new StringBuffer();
-					while( (line = in.readLine()) != null ) {
-						property.append(line.substring(1, line.indexOf("]")));
-						if( property.toString().equalsIgnoreCase("NAME") ) { 
-							loadee.setName( line.substring(line.indexOf("]")+1));
-							if( DungeonDigger.CHARACTERBANK.get(property) != null ) {
-								logger.info("Duplicant character found: " + loadee.getName());
-								duplicant = true;
-								break;
-							}
-						}
-						if( property.toString().equalsIgnoreCase("XCOORD") ) { loadee.setPlayerXCoord( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
-						if( property.toString().equalsIgnoreCase("YCOORD") ) { loadee.setPlayerYCoord( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
-						if( property.toString().equalsIgnoreCase("MAXHITPOINTS") ) { loadee.setHitPoints( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
-						if( property.toString().equalsIgnoreCase("SPEED") ) { loadee.setSpeed( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
-						if( property.toString().equalsIgnoreCase("AVATAR") ) { loadee.setIconName( line.substring(line.indexOf("]")+1)); }
-						property.setLength(0);
-					}
-					
-					if( !duplicant ) {
-						DungeonDigger.CHARACTERBANK.put(loadee.getName(), loadee);
-						logger.info("Loaded character: " + loadee.getName());
-					}
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
 	}
 	
 	// Capture clicks and see if they clicked the start button

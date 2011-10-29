@@ -1,10 +1,8 @@
 package dungeonDigger.gameFlow;
 
 import java.util.LinkedList;
-import java.util.Stack;
 import java.util.logging.Logger;
 
-import org.lwjgl.input.Keyboard;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
@@ -60,84 +58,52 @@ public class NetworkPlayer {
 		this.setProposedPlayerX( this.getPlayerXCoord() );	
 		this.setProposedPlayerY( this.getPlayerYCoord() );
 		
-		if (inputs.isKeyDown(Keyboard.KEY_UP) && 
+		/* PRESSED UP */
+		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveUp")) && 
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getCollisionBox(), speed))  > 0) {
 			this.setProposedPlayerY( this.getPlayerYCoord() - movement );	
-			//pendingValidation = true;
 		} 
-
-		if (inputs.isKeyDown(Keyboard.KEY_DOWN) &&
+		/* PRESSED DOWN */
+		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveDown")) &&
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getCollisionBox(), speed))  > 0) { 
 			this.setProposedPlayerY( this.getPlayerYCoord() + movement );
-			//pendingValidation = true;
 		} 
-
-		if (inputs.isKeyDown(Keyboard.KEY_LEFT) &&
+		/* PRESSED LEFT */
+		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveLeft")) &&
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getCollisionBox(), speed))  > 0) { 
 			setFlippedLeft(true);	
 			this.setProposedPlayerX( this.getPlayerXCoord() - movement );
-			//pendingValidation = true;
 		} 
-
-		if (inputs.isKeyDown(Keyboard.KEY_RIGHT) &&
+		/* PRESSED RIGHT */
+		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveRight")) &&
 				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getCollisionBox(), speed))  > 0) {
 			setFlippedLeft(false);
 			this.setProposedPlayerX( this.getPlayerXCoord() + movement );
-			//pendingValidation = true;
 		} 
 		// If we move then handle it based on the server scenario we're in
-		//if( pendingValidation ) {
-			switch(DungeonDigger.STATE) {
-				case INGAME:
-					if( this.movementList.size() == 0 ) {
-						this.movementList.add( new Point( this.getPlayerXCoord(), this.getPlayerYCoord() ) );
-					}
-					this.movementList.add( new Point( this.getProposedPlayerX(), this.getProposedPlayerY() ) );
-					DungeonDigger.CLIENT.sendTCP(new Network.PlayerMovementRequest(name, proposedPlayerX, proposedPlayerY));
-					this.setPlayerXCoord( this.getProposedPlayerX() );
-					this.setPlayerYCoord( this.getProposedPlayerY() );
-					break;
-				case HOSTINGGAME:
-					PlayerMovementUpdate packet = new Network.PlayerMovementUpdate(name, playerXCoord, playerYCoord);
-					DungeonDigger.SERVER.sendToAllTCP(packet);
-					// Allow to flow into SINGLEPLAYER condition
-				case SINGLEPLAYER:
-					this.setPlayerXCoord( this.getProposedPlayerX() );
-					this.setPlayerYCoord( this.getProposedPlayerY() );
-					pendingValidation = false;
-					break;
-			}
-		//}		
-	}
-	
-	public void soloPlaying(GameContainer container, int delta, Input inputs) {
-		int movement;
-		if (inputs.isKeyDown(Keyboard.KEY_UP) && 
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getCollisionBox(), speed))  > 0) {
-			this.setPlayerYCoord( this.getPlayerYCoord() - movement );		
-		} 
-
-		if (inputs.isKeyDown(Keyboard.KEY_DOWN) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getCollisionBox(), speed))  > 0) { 
-			this.setPlayerYCoord( this.getPlayerYCoord() + movement );
-		} 
-
-		if (inputs.isKeyDown(Keyboard.KEY_LEFT) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getCollisionBox(), speed))  > 0) { 
-			setFlippedLeft(true);	
-			this.setPlayerXCoord( this.getPlayerXCoord() - movement );
-		} 
-
-		if (inputs.isKeyDown(Keyboard.KEY_RIGHT) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getCollisionBox(), speed))  > 0) {
-			setFlippedLeft(false);
-			this.setPlayerXCoord( this.getPlayerXCoord() + movement );
-		} 
+		switch(DungeonDigger.STATE) {
+			case INGAME:
+				if( this.movementList.size() == 0 ) {
+					this.movementList.add( new Point( this.getPlayerXCoord(), this.getPlayerYCoord() ) );
+				}
+				this.movementList.add( new Point( this.getProposedPlayerX(), this.getProposedPlayerY() ) );
+				DungeonDigger.CLIENT.sendTCP(new Network.PlayerMovementRequest(name, proposedPlayerX, proposedPlayerY));
+				this.setPlayerXCoord( this.getProposedPlayerX() );
+				this.setPlayerYCoord( this.getProposedPlayerY() );
+				break;
+			case HOSTINGGAME:
+				PlayerMovementUpdate packet = new Network.PlayerMovementUpdate(name, playerXCoord, playerYCoord);
+				DungeonDigger.SERVER.sendToAllTCP(packet);
+				// NO BREAK; Allow to flow into SINGLEPLAYER condition
+			case SINGLEPLAYER:
+				this.setPlayerXCoord( this.getProposedPlayerX() );
+				this.setPlayerYCoord( this.getProposedPlayerY() );
+				break;
+		}
 	}
 	/***********************
 	 * GETTERS AND SETTERS *
 	 ***********************/
-
 	public int getPlayerXCoord() {
 		return playerXCoord;
 	}
@@ -184,63 +150,48 @@ public class NetworkPlayer {
 	public Image getIcon() {
 		return icon;
 	}
-
 	public void setFlippedLeft(boolean flippedLeft) {
 		this.flippedLeft = flippedLeft;
 	}
-
 	public boolean isFlippedLeft() {
 		return flippedLeft;
 	}
-
 	public void setName(String name) {
 		this.name = name;
 	}
-
 	public String getName() {
 		return name;
 	}
-
 	public String getIconName() {
 		return iconName;
 	}
-
 	public void setIconName(String iconName) {
 		this.iconName = iconName;
 	}
-
 	public void setProposedPlayerX(int proposedPlayerX) {
 		this.proposedPlayerX = proposedPlayerX;
 	}
-
 	public int getProposedPlayerX() {
 		return proposedPlayerX;
 	}
-
 	public void setProposedPlayerY(int proposedPlayerY) {
 		this.proposedPlayerY = proposedPlayerY;
 	}
-
 	public int getProposedPlayerY() {
 		return proposedPlayerY;
 	}
-
 	public void setPendingValidation(boolean pendingValidation) {
 		this.pendingValidation = pendingValidation;
 	}
-
 	public boolean isPendingValidation() {
 		return pendingValidation;
 	}
-
 	public LinkedList<Point> getMovementList() {
 		return movementList;
 	}
-
 	public void setMovementList(LinkedList<Point> movementList) {
 		this.movementList = movementList;
-	}
-	
+	}	
 	public Rectangle getCollisionBox() {
 		return new Rectangle(this.playerXCoord, this.playerYCoord + this.icon.getHeight()/2, this.icon.getWidth(), this.icon.getHeight()/2);
 	}

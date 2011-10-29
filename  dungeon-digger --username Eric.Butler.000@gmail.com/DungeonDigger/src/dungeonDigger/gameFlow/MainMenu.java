@@ -15,7 +15,6 @@ import org.newdawn.slick.gui.ComponentListener;
 import org.newdawn.slick.gui.TextField;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
-import org.newdawn.slick.util.ResourceLoader;
 
 import dungeonDigger.network.ConnectionState;
 
@@ -29,7 +28,6 @@ public class MainMenu extends BasicGameState {
 
 	@Override
 	public void init(GameContainer container, StateBasedGame game) throws SlickException {
-		loadImages();
 		Font awtFont = new Font("Times New Roman", 0, 24);			
 		TrueTypeFont font = new TrueTypeFont(awtFont, false);
 		
@@ -123,14 +121,6 @@ public class MainMenu extends BasicGameState {
 				if( inputs.isKeyDown(Keyboard.KEY_4) ) { DungeonDigger.STATE = ConnectionState.SETTINGUP; }
 				if( inputs.isKeyDown(Keyboard.KEY_ESCAPE) ) { System.exit(0); }
 				break;
-		}
-	}
-	
-	public void loadImages() {
-		try {
-			DungeonDigger.IMAGES.put("dwarf1", new Image( "dwarf1.png", new Color(255, 0, 255)));
-		} catch (SlickException e) {
-			e.printStackTrace();
 		}
 	}
 }

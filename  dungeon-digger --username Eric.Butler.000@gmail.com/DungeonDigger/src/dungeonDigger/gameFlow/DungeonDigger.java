@@ -1,14 +1,22 @@
 package dungeonDigger.gameFlow;
 
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.logging.Logger;
 
 import org.lwjgl.LWJGLUtil;
+import org.lwjgl.input.Keyboard;
 import org.newdawn.slick.AppGameContainer;
+import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
@@ -39,6 +47,7 @@ public class DungeonDigger extends StateBasedGame {
 	public static LinkedList<ChatPacket> CHATS = new LinkedList<ChatPacket>();
 	public static HashMap<String, NetworkPlayer> CHARACTERBANK = new HashMap<String, NetworkPlayer>();
 	public static HashSet<String> ACTIVESESSIONNAMES = new HashSet<String>();
+	public static HashMap<String, Integer> KEY_BINDINGS = new HashMap<String, Integer>();
 	
 	public DungeonDigger(String title) {
 		super(title);
@@ -46,6 +55,8 @@ public class DungeonDigger extends StateBasedGame {
 
 	// Start game
 	public static void main(String[] args) {
+		importSettings();
+		
 		try {
 			System.setProperty("org.lwjgl.librarypath", new File(new File(System.getProperty("user.dir"), "native"), LWJGLUtil.getPlatformName()).getAbsolutePath());
 			System.setProperty("net.java.games.input.librarypath", System.getProperty("org.lwjgl.librarypath"));
@@ -69,5 +80,100 @@ public class DungeonDigger extends StateBasedGame {
 		
 		STATE = ConnectionState.IDLE;
 		this.enterState(DungeonDigger.MAINMENU);
+	}
+	
+	public static void importSettings() {
+		loadImages();
+		loadCharacterFiles();
+		loadSettings();		
+	}
+	
+	public static void loadImages() {
+		try {
+			DungeonDigger.IMAGES.put("dwarf1", new Image( "dwarf1.png", new Color(255, 0, 255)));
+		} catch (SlickException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/*Load all .csf files into memory for players' characters */
+	public static void loadCharacterFiles() {
+		BufferedReader in;
+		File file = new File("data/characters");
+		
+		if( !file.isDirectory() ) { file.mkdir(); }
+		else {
+			// Create filter to ignore all but csf files
+			FilenameFilter charFilesOnly = new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					if( name.endsWith(".csf") ) { return true; }
+					return false;
+				}				
+			};
+			// Try to load each player file
+			for( File f : file.listFiles( charFilesOnly ) ){
+				try {
+					in = new BufferedReader(new FileReader(f));
+					NetworkPlayer loadee = new NetworkPlayer();
+					String line = in.readLine();
+					boolean duplicant = false;
+					
+					if( !line.equalsIgnoreCase("[CHARACTER]") ) {
+						Logger.getAnonymousLogger().info("Character file: " + f.getName() + " seems corrupt. Skipping.");
+						continue;
+					}
+					
+					// Setup player object
+					StringBuffer property = new StringBuffer();
+					while( (line = in.readLine()) != null ) {
+						property.append(line.substring(1, line.indexOf("]")));
+						if( property.toString().equalsIgnoreCase("NAME") ) { 
+							loadee.setName( line.substring(line.indexOf("]")+1));
+							if( DungeonDigger.CHARACTERBANK.get(property) != null ) {
+								Logger.getAnonymousLogger().info("Duplicant character found: " + loadee.getName());
+								duplicant = true;
+								break;
+							}
+						}
+						if( property.toString().equalsIgnoreCase("XCOORD") ) { loadee.setPlayerXCoord( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("YCOORD") ) { loadee.setPlayerYCoord( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("MAXHITPOINTS") ) { loadee.setHitPoints( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("SPEED") ) { loadee.setSpeed( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("AVATAR") ) { loadee.setIconName( line.substring(line.indexOf("]")+1)); }
+						property.setLength(0);
+					}
+					
+					if( !duplicant ) {
+						DungeonDigger.CHARACTERBANK.put(loadee.getName(), loadee);
+						Logger.getAnonymousLogger().info("Loaded character: " + loadee.getName());
+					}
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	public static void loadSettings() {
+		// Setup standard keyBindings
+		KEY_BINDINGS.put("moveUp", Keyboard.KEY_W);
+		KEY_BINDINGS.put("moveDown", Keyboard.KEY_S);
+		KEY_BINDINGS.put("moveLeft", Keyboard.KEY_A);
+		KEY_BINDINGS.put("moveRight", Keyboard.KEY_D);
+		
+		String str;
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(new File("config.ini")));
+			while( (str = br.readLine()) != null ) {
+				
+			}
+		} catch( FileNotFoundException e ) {
+			Logger.getAnonymousLogger().info("No config ini file found!  Using default settings.");
+		} catch( IOException e ) {
+			Logger.getAnonymousLogger().info("Problem with config ini file!  Using default settings.");
+		}		
 	}
 }

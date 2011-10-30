@@ -25,6 +25,7 @@ import org.newdawn.slick.state.StateBasedGame;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Server;
 
+import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.network.ConnectionState;
 import dungeonDigger.network.Network.ChatPacket;
 import dungeonDigger.network.Network.TextPacket;

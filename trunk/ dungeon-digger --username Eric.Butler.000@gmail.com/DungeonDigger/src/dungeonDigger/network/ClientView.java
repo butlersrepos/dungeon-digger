@@ -8,7 +8,7 @@ import org.newdawn.slick.Graphics;
 import com.esotericsoftware.kryonet.Client;
 
 import dungeonDigger.contentGeneration.GameSquare;
-import dungeonDigger.gameFlow.NetworkPlayer;
+import dungeonDigger.entities.NetworkPlayer;
 
 public class ClientView {
 	private Client connection;

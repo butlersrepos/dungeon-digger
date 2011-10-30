@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.logging.Logger;
 
@@ -20,6 +21,7 @@ import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
+import org.newdawn.slick.state.GameState;
 import org.newdawn.slick.state.StateBasedGame;
 
 import com.esotericsoftware.kryonet.Client;
@@ -55,8 +57,6 @@ public class DungeonDigger extends StateBasedGame {
 
 	// Start game
 	public static void main(String[] args) {
-		importSettings();
-		
 		try {
 			System.setProperty("org.lwjgl.librarypath", new File(new File(System.getProperty("user.dir"), "native"), LWJGLUtil.getPlatformName()).getAbsolutePath());
 			System.setProperty("net.java.games.input.librarypath", System.getProperty("org.lwjgl.librarypath"));
@@ -70,9 +70,11 @@ public class DungeonDigger extends StateBasedGame {
 			e.printStackTrace();
 		}
 	}
-
+	
 	@Override
 	public void initStatesList(GameContainer container) throws SlickException {
+		importSettings();
+		
 		this.addState(new MainMenu());
 		this.addState(new SinglePlayerDungeon());
 		this.addState(new MultiplayerDungeon());
@@ -83,9 +85,21 @@ public class DungeonDigger extends StateBasedGame {
 	}
 	
 	public static void importSettings() {
+		prepDirectories();
 		loadImages();
 		loadCharacterFiles();
 		loadSettings();		
+	}
+	
+	public static void prepDirectories() {
+		File file = new File("data");		
+		if( !file.isDirectory() ) { file.mkdir(); }
+		
+		file = new File("data/characters");		
+		if( !file.isDirectory() ) { file.mkdir(); }
+		
+		file = new File("data/maps");		
+		if( !file.isDirectory() ) { file.mkdir(); }
 	}
 	
 	public static void loadImages() {
@@ -166,9 +180,13 @@ public class DungeonDigger extends StateBasedGame {
 		
 		String str;
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(new File("config.ini")));
+			BufferedReader br = new BufferedReader(new FileReader(new File("data/config.ini")));
 			while( (str = br.readLine()) != null ) {
+				int separator = str.indexOf("=");
+				String binding = str.substring(0, separator);
+				int key = Keyboard.getKeyIndex(str.substring(separator + 1));
 				
+				KEY_BINDINGS.put(binding, key);				
 			}
 		} catch( FileNotFoundException e ) {
 			Logger.getAnonymousLogger().info("No config ini file found!  Using default settings.");

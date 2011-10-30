@@ -16,7 +16,7 @@ import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.network.ConnectionState;
 import dungeonDigger.network.Network;
 
-public class MultiplayerDungeon extends BasicGameState {
+public class MultiplayerDungeon extends DungeonDiggerState {
 	private Vector2f startPos;
 	// Used for dungeon data of both, aside: "CLIENT" = viewable interface
 	public static DungeonGenerator CLIENT_VIEW;
@@ -26,8 +26,7 @@ public class MultiplayerDungeon extends BasicGameState {
 	public int getID() { return 2; }
 
 	@Override
-	public void init(GameContainer container, StateBasedGame game) throws SlickException {
-	}
+	public void init(GameContainer container, StateBasedGame game) throws SlickException {}
 
 	@Override
 	public void enter(GameContainer container, StateBasedGame game) throws SlickException {		
@@ -67,42 +66,6 @@ public class MultiplayerDungeon extends BasicGameState {
 			DungeonDigger.CLIENT.setTimeout(0);
 			CLIENT_VIEW = new DungeonGenerator();
 			CLIENT_VIEW.initializeDungeon(100, 100);
-		}
-	}
-	
-	@Override
-	public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
-		switch(DungeonDigger.STATE) {
-			case JOININGGAME: break;
-			case LAUNCHINGGAME: break;			
-			case INGAME:	
-			case HOSTINGGAME:
-				DungeonDigger.myCharacter.update(container, delta);				
-				break;
-		}
-	}
-	
-	@Override
-	public void render(GameContainer container, StateBasedGame game, Graphics g) throws SlickException {
-		switch(DungeonDigger.STATE) {
-			case JOININGGAME:
-				g.setColor(Color.yellow);
-				g.drawString("Loading map information...", 75, 75);
-				break;			
-			case LAUNCHINGGAME:
-				g.setColor(Color.blue);
-				g.drawString("Generating map and synching players...", 75, 75);
-				break;
-			case INGAME:
-			case HOSTINGGAME:				
-				// Translate graphics to preserve coordinates of map elements and follow the player
-				g.translate(-DungeonDigger.myCharacter.getPlayerXCoord()+container.getWidth()/2, -DungeonDigger.myCharacter.getPlayerYCoord()+container.getHeight()/2);
-				
-				CLIENT_VIEW.renderDungeon(container, g);
-				
-				// Undo translation to render moving components (player, HUD)
-				g.translate(DungeonDigger.myCharacter.getPlayerXCoord()-container.getWidth()/2, DungeonDigger.myCharacter.getPlayerYCoord()-container.getHeight()/2);
-				break;
 		}
 	}
 }

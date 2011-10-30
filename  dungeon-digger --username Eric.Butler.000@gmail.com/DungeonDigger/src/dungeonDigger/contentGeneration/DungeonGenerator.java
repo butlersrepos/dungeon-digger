@@ -106,10 +106,10 @@ public class DungeonGenerator {
 
 				if( dungeon[row][col].getTileLetter() == 'W' ) {
 					dirtWallImage.draw(col*ratioX, row*ratioY);
-					ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
+					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
 				} else if( dungeon[row][col].getTileLetter() == 'O' ) {
 					dirtFloorImage.draw(col*ratioX, row*ratioY);
-					ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
+					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
 				} else if( dungeon[row][col].getTileLetter() == 'E' || dungeon[row][col].getTileLetter() == 'X' ) {
 					entranceImage.draw(col*ratioX, row*ratioY);
 				} 
@@ -141,7 +141,7 @@ public class DungeonGenerator {
 		}
 		// Draw player
 		g.drawImage(guy.getIcon().getFlippedCopy( guy.isFlippedLeft(), false), guy.getPlayerXCoord(), guy.getPlayerYCoord());
-		ShapeRenderer.draw(guy.getTerrainCollisionBox());
+		//ShapeRenderer.draw(guy.getTerrainCollisionBox());
 
 	}
 	

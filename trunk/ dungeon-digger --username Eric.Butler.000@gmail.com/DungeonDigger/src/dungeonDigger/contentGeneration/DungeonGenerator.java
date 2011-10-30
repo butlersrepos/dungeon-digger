@@ -12,7 +12,6 @@ import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.geom.Point;
 import org.newdawn.slick.geom.Rectangle;
-import org.newdawn.slick.geom.ShapeRenderer;
 import org.newdawn.slick.geom.Vector2f;
 import org.newdawn.slick.util.ResourceLoader;
 
@@ -37,14 +36,12 @@ public class DungeonGenerator {
 	private static final int ratioY = 82;
 	private Vector2f entrance;
 	
-	public DungeonGenerator() {		
-		try {
-			roomWallImage = new Image( ResourceLoader.getResourceAsStream("dirt floor 100x120.png"), "dirt floor 100x120.png", false);
-			dirtFloorImage =  new Image( ResourceLoader.getResourceAsStream("Dirt Block.png"), "Dirt Block.png", false);
-			roomFloorImage =  new Image( ResourceLoader.getResourceAsStream("dirt floor 100x120.png"), "dirt floor 100x120.png", false);
-			dirtWallImage = new Image( ResourceLoader.getResourceAsStream("Wall Block Tall.png"), "Wall Block Tall.png", false);
-			entranceImage = new Image( ResourceLoader.getResourceAsStream("Stone Block.png"), "Stone Block.png", false);			
-		} catch( SlickException se){ }
+	public DungeonGenerator() {	
+		roomWallImage = DungeonDigger.IMAGES.get("roomWallImage");
+		dirtFloorImage = DungeonDigger.IMAGES.get("dirtFloorImage");
+		roomFloorImage = DungeonDigger.IMAGES.get("roomFloorImage");
+		dirtWallImage = DungeonDigger.IMAGES.get("dirtWallImage");
+		entranceImage = DungeonDigger.IMAGES.get("entranceImage");	
 		
 		// Define our room templates
 		// TODO: Move to a file and import on startup? then patches can simply update external file

@@ -10,7 +10,7 @@ import org.newdawn.slick.state.StateBasedGame;
 
 import dungeonDigger.contentGeneration.DungeonGenerator;
 
-public class SinglePlayerDungeon extends BasicGameState {
+public class SinglePlayerDungeon extends DungeonDiggerState {
 	private boolean gen1Toggled, gen2Toggled;
 	private double[] hallsDensity = new double[]{1d, 0.95d};
 	private NetworkPlayer myPlayer;
@@ -31,11 +31,8 @@ public class SinglePlayerDungeon extends BasicGameState {
 	
 	@Override
 	public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
+		super.update(container, game, delta);
 		Input inputs = container.getInput();
-
-		for( NetworkPlayer p : MultiplayerDungeon.CLIENT_VIEW.getPlayerList() ) {
-			p.update(container, delta);
-		}
 		
 		// 1 & 2 generate a layout
 		if( inputs.isKeyDown(Keyboard.KEY_1) ) {
@@ -53,16 +50,4 @@ public class SinglePlayerDungeon extends BasicGameState {
 			}
 		} else { gen2Toggled = false; }
 	}
-	
-	@Override
-	public void render(GameContainer container, StateBasedGame game, Graphics g) throws SlickException {
-		// Translate graphics to preserve coordinates of map elements and follow the player
-		g.translate(-myPlayer.getPlayerXCoord()+container.getWidth()/2, -myPlayer.getPlayerYCoord()+container.getHeight()/2);
-		
-		MultiplayerDungeon.CLIENT_VIEW.renderDungeon(container, g);
-		
-		// Undo translation to render moving components (player, HUD)
-		g.translate(myPlayer.getPlayerXCoord()-container.getWidth()/2, myPlayer.getPlayerYCoord()-container.getHeight()/2);
-	}
-
 }

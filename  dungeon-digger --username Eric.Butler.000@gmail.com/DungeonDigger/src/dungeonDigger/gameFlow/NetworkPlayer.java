@@ -60,23 +60,23 @@ public class NetworkPlayer {
 		
 		/* PRESSED UP */
 		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveUp")) && 
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getCollisionBox(), speed))  > 0) {
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getTerrainCollisionBox(), speed))  > 0) {
 			this.setProposedPlayerY( this.getPlayerYCoord() - movement );	
 		} 
 		/* PRESSED DOWN */
 		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveDown")) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getCollisionBox(), speed))  > 0) { 
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getTerrainCollisionBox(), speed))  > 0) { 
 			this.setProposedPlayerY( this.getPlayerYCoord() + movement );
 		} 
 		/* PRESSED LEFT */
 		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveLeft")) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getCollisionBox(), speed))  > 0) { 
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getTerrainCollisionBox(), speed))  > 0) { 
 			setFlippedLeft(true);	
 			this.setProposedPlayerX( this.getPlayerXCoord() - movement );
 		} 
 		/* PRESSED RIGHT */
 		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveRight")) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getCollisionBox(), speed))  > 0) {
+				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getTerrainCollisionBox(), speed))  > 0) {
 			setFlippedLeft(false);
 			this.setProposedPlayerX( this.getPlayerXCoord() + movement );
 		} 
@@ -192,7 +192,18 @@ public class NetworkPlayer {
 	public void setMovementList(LinkedList<Point> movementList) {
 		this.movementList = movementList;
 	}	
-	public Rectangle getCollisionBox() {
+	/**
+	 * Used only to calculate collision with map terrain
+	 * @return
+	 */
+	public Rectangle getTerrainCollisionBox() {
+		return new Rectangle(this.playerXCoord, this.playerYCoord, this.icon.getWidth(), this.icon.getHeight());
+	}
+	/**
+	 * Used to calculate collision with players, projectiles, anything that isn't map terrain
+	 * @return
+	 */
+	public Rectangle getEntityCollisionBox() {
 		return new Rectangle(this.playerXCoord, this.playerYCoord + this.icon.getHeight()/2, this.icon.getWidth(), this.icon.getHeight()/2);
 	}
 }

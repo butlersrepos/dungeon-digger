@@ -36,6 +36,7 @@ public class DungeonGenerator {
 	private static final int ratioY = 82;
 	private Vector2f entrance;
 	
+	// TODO: Refactor to an enum package?
 	private enum BorderCheck { ORTHOGONAL, DIAGONAL, ALL }
 	
 	public DungeonGenerator() {		
@@ -140,7 +141,7 @@ public class DungeonGenerator {
 		}
 		// Draw player
 		g.drawImage(guy.getIcon().getFlippedCopy( guy.isFlippedLeft(), false), guy.getPlayerXCoord(), guy.getPlayerYCoord());
-		ShapeRenderer.draw(guy.getCollisionBox());
+		ShapeRenderer.draw(guy.getTerrainCollisionBox());
 
 	}
 	
@@ -482,34 +483,40 @@ public class DungeonGenerator {
 	}
 	
 	/**@param dir Direction Enum, cardinal direction.
-	 * @param playerY Array number[0 - dungeonWidth-1], not pixel or grid count.
-	 * @param playerX Array number[0 - dungeonHeight-1], not pixel or grid count.
+	 * @param collisionBox The player's terrainCollisionBox
 	 * @param distance Speed or distance to attempt to move.
 	 * @return The amount of distance the character could move in that direction from 0 to distance(speed) passed in. */
 	public int canMove(Direction dir, Rectangle collisionBox, int distance) {		
 		int goodToGo = 0;
+		// Check each 'step' of our attempted movement from 1 - distance(ie speed)
 		for(int i = 1; i <= distance; i++) {
-			// Assemble suggested new position bounds to check		
-			HashSet<Vector2f> collisionPoints = new HashSet<Vector2f>();
-			collisionPoints.add( new Vector2f(collisionBox.getMinX()+dir.adjX()*i, collisionBox.getMinY()+dir.adjY()*i) );
-			collisionPoints.add( new Vector2f(collisionBox.getMaxX()+dir.adjX()*i, collisionBox.getMinY()+dir.adjY()*i) );
-			collisionPoints.add( new Vector2f(collisionBox.getMinX()+dir.adjX()*i, collisionBox.getMaxY()+dir.adjY()*i) );
-			collisionPoints.add( new Vector2f(collisionBox.getMaxX()+dir.adjX()*i, collisionBox.getMaxY()+dir.adjY()*i) );
+			// Assemble suggested new position bounds to check, ie corners of suggested movement	
+			HashSet<Vector2f> cornerPoints = new HashSet<Vector2f>();
+			cornerPoints.add( new Vector2f(collisionBox.getMinX()+dir.adjX()*i, collisionBox.getMinY()+dir.adjY()*i) );
+			cornerPoints.add( new Vector2f(collisionBox.getMaxX()+dir.adjX()*i, collisionBox.getMinY()+dir.adjY()*i) );
+			cornerPoints.add( new Vector2f(collisionBox.getMinX()+dir.adjX()*i, collisionBox.getMaxY()+dir.adjY()*i) );
+			cornerPoints.add( new Vector2f(collisionBox.getMaxX()+dir.adjX()*i, collisionBox.getMaxY()+dir.adjY()*i) );
 			
-			for( Vector2f point : collisionPoints ) {
+			// Check each corner of this step
+			for( Vector2f point : cornerPoints ) {
 				// Out of bounds check
 				if( point.y < 0 || point.y > this.dungeonHeight*ratioY ||
 						point.x < 0 || point.x > this.dungeonWidth*ratioX ) {
 					return goodToGo;
 				}
 				
+				// Figure out what map square this point falls on
 				int checkX = (int) (point.x / ratioX);
 				int checkY = (int) (point.y / ratioY);
 				
+				// If that's a wall square... no go, we're done here, return the number of steps that
+				// were OKed so far
 				if( this.dungeon[checkY][checkX].getTileLetter('W') ) {
 					return goodToGo;
 				}
 			}
+			// If this step, i, didn't have any conflicts on any of the proposed new corners, then
+			// increment our ongoing count of how many steps are OK to take
 			goodToGo++;
 		}
 		return goodToGo;

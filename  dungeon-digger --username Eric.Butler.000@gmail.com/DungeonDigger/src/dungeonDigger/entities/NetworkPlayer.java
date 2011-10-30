@@ -9,7 +9,7 @@ import org.newdawn.slick.Input;
 import org.newdawn.slick.geom.Point;
 import org.newdawn.slick.geom.Rectangle;
 
-import dungeonDigger.Enums.Direction;
+import dungeonDigger.enums.Direction;
 import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.gameFlow.MultiplayerDungeon;
 import dungeonDigger.network.Network;

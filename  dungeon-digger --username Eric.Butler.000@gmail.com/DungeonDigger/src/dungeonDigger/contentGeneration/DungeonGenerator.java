@@ -16,9 +16,10 @@ import org.newdawn.slick.geom.ShapeRenderer;
 import org.newdawn.slick.geom.Vector2f;
 import org.newdawn.slick.util.ResourceLoader;
 
-import dungeonDigger.gameFlow.Direction;
+import dungeonDigger.Enums.BorderCheck;
+import dungeonDigger.Enums.Direction;
+import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.gameFlow.DungeonDigger;
-import dungeonDigger.gameFlow.NetworkPlayer;
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.GameStartPacket;
 
@@ -35,9 +36,6 @@ public class DungeonGenerator {
 	private static final int ratioX = 99;
 	private static final int ratioY = 82;
 	private Vector2f entrance;
-	
-	// TODO: Refactor to an enum package?
-	private enum BorderCheck { ORTHOGONAL, DIAGONAL, ALL }
 	
 	public DungeonGenerator() {		
 		try {

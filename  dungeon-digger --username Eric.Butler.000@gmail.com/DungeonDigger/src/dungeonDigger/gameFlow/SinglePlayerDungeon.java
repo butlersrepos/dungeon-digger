@@ -9,6 +9,7 @@ import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
 import dungeonDigger.contentGeneration.DungeonGenerator;
+import dungeonDigger.entities.NetworkPlayer;
 
 public class SinglePlayerDungeon extends DungeonDiggerState {
 	private boolean gen1Toggled, gen2Toggled;

@@ -15,9 +15,9 @@ import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 
 import dungeonDigger.contentGeneration.GameSquare;
+import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.gameFlow.MultiplayerDungeon;
-import dungeonDigger.gameFlow.NetworkPlayer;
 
 public class Network {
 	static public final int port = 54555;

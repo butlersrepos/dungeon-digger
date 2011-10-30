@@ -16,6 +16,7 @@ import org.newdawn.slick.gui.TextField;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
+import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.network.ConnectionState;
 
 public class MainMenu extends BasicGameState {

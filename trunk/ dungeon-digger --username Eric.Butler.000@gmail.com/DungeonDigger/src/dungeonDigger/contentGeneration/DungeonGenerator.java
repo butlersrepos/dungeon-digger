@@ -16,9 +16,9 @@ import org.newdawn.slick.geom.ShapeRenderer;
 import org.newdawn.slick.geom.Vector2f;
 import org.newdawn.slick.util.ResourceLoader;
 
-import dungeonDigger.Enums.BorderCheck;
-import dungeonDigger.Enums.Direction;
 import dungeonDigger.entities.NetworkPlayer;
+import dungeonDigger.enums.BorderCheck;
+import dungeonDigger.enums.Direction;
 import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.GameStartPacket;

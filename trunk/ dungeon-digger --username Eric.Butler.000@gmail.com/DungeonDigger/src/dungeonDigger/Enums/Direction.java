@@ -1,4 +1,4 @@
-package dungeonDigger.Enums;
+package dungeonDigger.enums;
 
 public enum Direction {
 	NORTH (0, -1), 

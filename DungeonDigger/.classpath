@@ -1,0 +1,26 @@
+<classpath>
+  <classpathentry kind="src" path="src/main/java" including="**/*.java"/>
+  <classpathentry kind="src" path="src/main/resources" excluding="**/*.java"/>
+  <classpathentry kind="output" path="target/classes"/>
+  <classpathentry kind="var" path="M2_REPO/javax/jnlp/jnlp/1.2/jnlp-1.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/asm/asm/3.2/asm-3.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/ibxm/ibxm/unknown/ibxm-unknown.jar"/>
+  <classpathentry kind="var" path="M2_REPO/net/java/jinput/jinput/2.0.5/jinput-2.0.5.jar"/>
+  <classpathentry kind="var" path="M2_REPO/net/java/jinput/jinput-platform/2.0.5/jinput-platform-2.0.5-natives-linux.jar"/>
+  <classpathentry kind="var" path="M2_REPO/net/java/jinput/jinput-platform/2.0.5/jinput-platform-2.0.5-natives-osx.jar"/>
+  <classpathentry kind="var" path="M2_REPO/net/java/jinput/jinput-platform/2.0.5/jinput-platform-2.0.5-natives-windows.jar"/>
+  <classpathentry kind="var" path="M2_REPO/jcraft/jogg/0.0.7/jogg-0.0.7.jar"/>
+  <classpathentry kind="var" path="M2_REPO/jcraft/jorbis/0.0.15/jorbis-0.0.15.jar"/>
+  <classpathentry kind="var" path="M2_REPO/net/java/jutils/jutils/1.0.0/jutils-1.0.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/kryo/1.04/kryo-1.04.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/esotericsoftware/kryonet/1.04/kryonet-1.04.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/lwjgl/lwjgl/lwjgl/2.8.1/lwjgl-2.8.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/lwjgl/lwjgl/lwjgl-platform/2.8.1/lwjgl-platform-2.8.1-natives-linux.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/lwjgl/lwjgl/lwjgl-platform/2.8.1/lwjgl-platform-2.8.1-natives-osx.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/lwjgl/lwjgl/lwjgl-platform/2.8.1/lwjgl-platform-2.8.1-natives-windows.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/minlog/1.2/minlog-1.2.jar"/>
+  <classpathentry kind="var" path="M2_REPO/phys2d/phys2d/060408/phys2d-060408.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/reflectasm/1.01/reflectasm-1.01.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/cokeandcode/slick/Slick/274/Slick-274.jar"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
+</classpath>

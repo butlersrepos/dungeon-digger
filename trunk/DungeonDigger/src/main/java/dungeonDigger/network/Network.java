@@ -1,11 +1,10 @@
 package dungeonDigger.network;
 
+import java.awt.Point;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import java.awt.Point;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
@@ -18,7 +17,6 @@ import dungeonDigger.contentGeneration.GameSquare;
 import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.gameFlow.MultiplayerDungeon;
-import dungeonDigger.network.ConnectionState;
 
 public class Network {
 	static public final int port = 54555;
@@ -61,17 +59,22 @@ public class Network {
 		@Override
 		public void received(Connection connection, Object object) {
 			logger.setLevel(Level.OFF);
+			// LoginRequests handling
 			if( object instanceof LoginRequest ) {
 				logger.info("Recieved login request");
 				LoginRequest login = (LoginRequest)object;
+				// if already in, decline request
+				// TODO: kick previous?
 				if( DungeonDigger.ACTIVESESSIONNAMES.contains(login.account) ) { 
 					connection.sendTCP(new LoginResponse(false));
 					return; 
 				}
-				
+				// accept, add to active sessions, create playerinfo from account name
 				connection.sendTCP(new LoginResponse(true));
 				DungeonDigger.ACTIVESESSIONNAMES.add(login.account);
 				PlayerInfoPacket info = new PlayerInfoPacket();
+				
+				// if we have a record, use that info, otherwise new account created
 				if( DungeonDigger.CHARACTERBANK.get(login.account) != null ) {
 					logger.info("Login was a pre-existing player: " + login.account);					
 					info.player = DungeonDigger.CHARACTERBANK.get(login.account);
@@ -89,10 +92,14 @@ public class Network {
 					DungeonDigger.CHARACTERBANK.put(login.account, player);
 					connection.sendTCP(info);
 				}
+				// we're a server now if we weren't before, setup lobby
+				// TODO: alter to accomodate real-time joining
 				DungeonDigger.STATE = ConnectionState.SERVING;						
 				logger.info("Sent text packet");
 				connection.sendTCP(new TextPacket("Dungeon Lobby", 75, 75, 0));
 			}
+			// Handle chats and echo back to clients (if server), 10 most recent
+			// TODO: keep up to 100? allow client to change chat size
 			if( object instanceof ChatPacket ) {
 				logger.info("Recieved a chat packet.");
 				DungeonDigger.CHATS.add((ChatPacket)object);
@@ -102,16 +109,19 @@ public class Network {
 				}
 				if( DungeonDigger.CHATS.size() > 10 ) { DungeonDigger.CHATS.remove(); }
 			}
+			// Handle perma-texts to display on the screen(scores, global msgs, etc)
 			if( object instanceof TextPacket ) {
 				logger.info("Recieved a text packet.");
 				DungeonDigger.TEXTS.add( (TextPacket)object );
 			}
+			// Signoff - remove them from active sessions
 			if( object instanceof SignOff ) {
 				logger.info("Recieved a sign off packet.");
 				DungeonDigger.ACTIVESESSIONNAMES.remove( ((SignOff)object).account );
 				logger.info("Closing connection");
 				connection.close();
 			}
+			// Movement request - validate or invalidate to client
 			if( object instanceof PlayerMovementRequest ) {
 				PlayerMovementRequest packet = (PlayerMovementRequest)object;
 				int x = packet.x / MultiplayerDungeon.CLIENT_VIEW.getRatioX();

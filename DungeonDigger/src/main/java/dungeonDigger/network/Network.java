@@ -26,7 +26,7 @@ public class Network {
 	static public void register(EndPoint endPoint) {
 		Kryo kryo = endPoint.getKryo();
 		// TODO: LOGGER SETTINGS
-		Log.set(Log.LEVEL_NONE);
+		Log.set(Log.LEVEL_DEBUG);
 		kryo.register(TextPacket.class);
 		kryo.register(ChatPacket.class);
 		kryo.register(LoginRequest.class);

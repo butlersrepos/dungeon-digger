@@ -164,7 +164,7 @@ public class DungeonDigger extends StateBasedGame {
 					
 					if( !duplicant ) {
 						DungeonDigger.CHARACTERBANK.put(loadee.getName(), loadee);
-						Logger.getAnonymousLogger().info("Loaded character: " + loadee.getName());
+						Logger.getAnonymousLogger().info("Archived character: " + loadee.getName());
 					}
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();

@@ -124,8 +124,8 @@ public class Network {
 			// Movement request - validate or invalidate to client
 			if( object instanceof PlayerMovementRequest ) {
 				PlayerMovementRequest packet = (PlayerMovementRequest)object;
-				int x = packet.x / MultiplayerDungeon.CLIENT_VIEW.getRatioX();
-				int y = packet.y / MultiplayerDungeon.CLIENT_VIEW.getRatioY();
+				int x = packet.x / MultiplayerDungeon.CLIENT_VIEW.getRatioRow();
+				int y = packet.y / MultiplayerDungeon.CLIENT_VIEW.getRatioCol();
 				logger.info("Recieved a player movement request packet for " + packet.player + " to move to " + "X:" + packet.x + " Y:" + packet.y);
 				boolean passable = MultiplayerDungeon.CLIENT_VIEW.dungeon[y][x].isPassable();
 				logger.info("Position was passable: " + passable);
@@ -221,8 +221,8 @@ public class Network {
 						DungeonDigger.myCharacter.setPlayerXCoord((int)lastKnownGood.getX());
 						DungeonDigger.myCharacter.setPlayerYCoord((int)lastKnownGood.getY());
 					} 
-					int x = DungeonDigger.myCharacter.getProposedPlayerX() / MultiplayerDungeon.CLIENT_VIEW.getRatioX();
-					int y = DungeonDigger.myCharacter.getProposedPlayerY() / MultiplayerDungeon.CLIENT_VIEW.getRatioY();
+					int x = DungeonDigger.myCharacter.getProposedPlayerX() / MultiplayerDungeon.CLIENT_VIEW.getRatioRow();
+					int y = DungeonDigger.myCharacter.getProposedPlayerY() / MultiplayerDungeon.CLIENT_VIEW.getRatioCol();
 					logger.info("Sending tile request for " + x + ", " + y);
 				}
 				logger.info("Resetting pendingValidation");

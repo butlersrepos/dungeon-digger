@@ -11,21 +11,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Vector;
 import java.util.logging.Logger;
 
-import org.lwjgl.LWJGLUtil;
 import org.lwjgl.input.Keyboard;
+import org.newdawn.slick.Animation;
 import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
+import org.newdawn.slick.SpriteSheet;
 import org.newdawn.slick.state.StateBasedGame;
 import org.newdawn.slick.util.ResourceLoader;
 
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Server;
 
+import dungeonDigger.Enums.AbilityDeliveryMethod;
+import dungeonDigger.entities.Ability;
+import dungeonDigger.entities.AbilityFactory;
 import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.network.ConnectionState;
 import dungeonDigger.network.Network.ChatPacket;
@@ -49,7 +54,11 @@ public class DungeonDigger extends StateBasedGame {
 	public static LinkedList<ChatPacket> CHATS = new LinkedList<ChatPacket>();
 	public static HashMap<String, NetworkPlayer> CHARACTERBANK = new HashMap<String, NetworkPlayer>();
 	public static HashSet<String> ACTIVESESSIONNAMES = new HashSet<String>();
-	public static HashMap<String, Integer> KEY_BINDINGS = new HashMap<String, Integer>();
+	public static HashMap<Integer, String> KEY_BINDINGS = new HashMap<Integer, String>();
+	public static HashMap<String, String> SLOT_BINDINGS = new HashMap<String, String>();
+	public static HashMap<String, Ability> ABILITY_TEMPLATES = new HashMap<String, Ability>();
+	public static Vector<Ability> ACTIVE_ABILITIES = new Vector<>();
+	public static AbilityFactory ABILITY_FACTORY = new AbilityFactory();
 	
 	public DungeonDigger(String title) {
 		super(title);
@@ -88,6 +97,7 @@ public class DungeonDigger extends StateBasedGame {
 		prepDirectories();
 		loadImages();
 		loadCharacterFiles();
+		loadAbilities();
 		loadSettings();		
 	}
 	
@@ -105,6 +115,7 @@ public class DungeonDigger extends StateBasedGame {
 	public static void loadImages() {
 		try {
 			DungeonDigger.IMAGES.put("dwarf1", new Image( "dwarf1.png", new Color(255, 0, 255)));
+			DungeonDigger.IMAGES.put("engy", new Image( "engy.png", new Color(255, 0, 255)));
 			DungeonDigger.IMAGES.put("roomWallImage", new Image( ResourceLoader.getResourceAsStream("dirt floor 100x120.png"), "dirt floor 100x120.png", false));
 			DungeonDigger.IMAGES.put("dirtFloorImage",  new Image( ResourceLoader.getResourceAsStream("Dirt Block.png"), "Dirt Block.png", false));
 			DungeonDigger.IMAGES.put("roomFloorImage",  new Image( ResourceLoader.getResourceAsStream("dirt floor 100x120.png"), "dirt floor 100x120.png", false));
@@ -177,25 +188,164 @@ public class DungeonDigger extends StateBasedGame {
 
 	public static void loadSettings() {
 		// Setup standard keyBindings
-		KEY_BINDINGS.put("moveUp", Keyboard.KEY_W);
-		KEY_BINDINGS.put("moveDown", Keyboard.KEY_S);
-		KEY_BINDINGS.put("moveLeft", Keyboard.KEY_A);
-		KEY_BINDINGS.put("moveRight", Keyboard.KEY_D);
+		KEY_BINDINGS.put(Keyboard.KEY_W, 		"moveUp");
+		KEY_BINDINGS.put(Keyboard.KEY_S, 		"moveDown");
+		KEY_BINDINGS.put(Keyboard.KEY_A, 		"moveLeft");
+		KEY_BINDINGS.put(Keyboard.KEY_D, 		"moveRight");
+		KEY_BINDINGS.put(Keyboard.KEY_1, 		"slot1");
+		KEY_BINDINGS.put(Keyboard.KEY_2, 		"slot2");
+		KEY_BINDINGS.put(Keyboard.KEY_3, 		"slot3");
+		KEY_BINDINGS.put(Keyboard.KEY_4, 		"slot4");
+		KEY_BINDINGS.put(Keyboard.KEY_GRAVE, 	"slot5");
+		KEY_BINDINGS.put(Keyboard.KEY_Q, 		"slot6");
+		KEY_BINDINGS.put(Keyboard.KEY_E, 		"slot7");
+		KEY_BINDINGS.put(Keyboard.KEY_R, 		"slot8");
+		KEY_BINDINGS.put(Keyboard.KEY_F, 		"slot9");
+		KEY_BINDINGS.put(Keyboard.KEY_Z, 		"slot10");
+		KEY_BINDINGS.put(Keyboard.KEY_X, 		"slot11");
+		KEY_BINDINGS.put(Keyboard.KEY_C, 		"slot12");
+		KEY_BINDINGS.put(Keyboard.KEY_V, 		"slot13");
+		KEY_BINDINGS.put(Keyboard.KEY_SPACE, 	"slot14");
 		
 		String str;
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(new File("data/config.ini")));
 			while( (str = br.readLine()) != null ) {
 				int separator = str.indexOf("=");
-				String binding = str.substring(0, separator);
-				int key = Keyboard.getKeyIndex(str.substring(separator + 1));
+				int key = Keyboard.getKeyIndex(str.substring(0, separator));
+				String binding = str.substring(separator + 1);
 				
-				KEY_BINDINGS.put(binding, key);				
+				KEY_BINDINGS.put(key, binding);				
 			}
 		} catch( FileNotFoundException e ) {
 			Logger.getAnonymousLogger().info("No config ini file found!  Using default settings.");
 		} catch( IOException e ) {
 			Logger.getAnonymousLogger().info("Problem with config ini file!  Using default settings.");
-		}		
+		}
+		
+		// Setup standard/empty hotbars
+		SLOT_BINDINGS.put("slot1",	"fireball");
+		SLOT_BINDINGS.put("slot2",	"empty");
+		SLOT_BINDINGS.put("slot3",	"empty");
+		SLOT_BINDINGS.put("slot4",	"empty");
+		SLOT_BINDINGS.put("slot5",	"empty");
+		SLOT_BINDINGS.put("slot6",	"empty");
+		SLOT_BINDINGS.put("slot7",	"empty");
+		SLOT_BINDINGS.put("slot8",	"empty");
+		SLOT_BINDINGS.put("slot9",	"empty");
+		SLOT_BINDINGS.put("slot10",	"empty");
+		SLOT_BINDINGS.put("slot11",	"empty");
+		SLOT_BINDINGS.put("slot12",	"empty");
+		SLOT_BINDINGS.put("slot13",	"empty");
+		SLOT_BINDINGS.put("slot14",	"empty");
+	}
+	
+	public static void loadAbilities() {
+		BufferedReader in;
+		File file = new File("data/abilities");
+		Ability templater = null;
+		
+		if( !file.isDirectory() ) { 
+			file.mkdir();
+			System.out.println("NO ABILITY FILES FOUND! PLEASE REINSTALL.");
+			System.exit(-1);
+		} else {
+			// Create filter to ignore all but csf files
+			FilenameFilter abilFilesOnly = new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					if( name.endsWith(".adf") ) { return true; }
+					return false;
+				}				
+			};
+			// Try to load each player file
+			for( File f : file.listFiles( abilFilesOnly ) ){
+				try {
+					in = new BufferedReader(new FileReader(f));
+					String line = in.readLine();
+					String str1, str2, str3;
+					float x, y;
+					int x1=0, x2=0, y1=0, y2=0;
+					StringBuffer property = new StringBuffer();
+					boolean duplicant = false;
+					
+					if( !line.equalsIgnoreCase("[ABILITY]") ) {
+						Logger.getAnonymousLogger().info("Ability file: " + f.getName() + " seems corrupt. Skipping.");
+						continue;
+					}
+					
+					// Setup ability object
+					while( (line = in.readLine()) != null ) {
+						property.append(line.substring(1, line.indexOf("]")));
+						if( property.toString().equalsIgnoreCase("NAME") ) { 
+							templater = new Ability(line.substring(line.indexOf("]")+1));
+							if( DungeonDigger.ABILITY_TEMPLATES.get(templater.getName()) != null ) {
+								Logger.getAnonymousLogger().info("Duplicant ability template found: " + templater.getName());
+								duplicant = true;
+								break;
+							}
+						}
+						if( property.toString().equalsIgnoreCase("SPRITESHEET") ) { 
+							str1 = line.substring(line.indexOf("]")+1);
+							str2 = str1.substring( str1.lastIndexOf('_')+1, str1.lastIndexOf('x'));
+							str3 = str1.substring(str1.lastIndexOf('x')+1, str1.lastIndexOf('.'));
+							templater.setSpriteSheet( new SpriteSheet(new Image(str1, Color.magenta), Integer.parseInt(str2), Integer.parseInt(str3))); 
+						}
+						if( property.toString().equalsIgnoreCase("ANIMSTARTX") ) { x1 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
+						if( property.toString().equalsIgnoreCase("ANIMSTARTY") ) { y1 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
+						if( property.toString().equalsIgnoreCase("ANIMENDX") ) { x2 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
+						if( property.toString().equalsIgnoreCase("ANIMENDY") ) { y2 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
+						if( property.toString().equalsIgnoreCase("DAMAGING") ) { templater.setDamaging( Boolean.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("HITFRAMES") ) { 
+							str1 = line.substring(line.indexOf("]")+1);
+							str2 = str1.substring( str1.lastIndexOf('_')+1, str1.lastIndexOf('x'));
+							str3 = str1.substring(str1.lastIndexOf('x')+1, str1.lastIndexOf('.'));
+							templater.setHitFrames( new SpriteSheet(new Image(str1, Color.magenta), Integer.parseInt(str2), Integer.parseInt(str3))); 
+						}
+						if( property.toString().equalsIgnoreCase("SPEED") ) { templater.setSpeed( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("FRIENDLY") ) { templater.setFriendly( Boolean.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("MOUSE") ) { templater.setMouse( Boolean.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("START") ) { 
+							if( !line.substring(line.indexOf(']')+1, line.indexOf(',')).equalsIgnoreCase("M") ) {
+								x = Float.valueOf(line.substring(line.indexOf(']')+1, line.indexOf(',')));
+								y = Float.valueOf(line.substring(line.indexOf(',')+1));
+								templater.setStartPoint(x, y);
+							}
+						}
+						if( property.toString().equalsIgnoreCase("MIDDLE") ) { 
+							x = Float.valueOf(line.substring(line.indexOf(']')+1, line.indexOf(',')));
+							y = Float.valueOf(line.substring(line.indexOf(',')+1));
+							templater.setMiddlePoint(x, y); 
+						}
+						if( property.toString().equalsIgnoreCase("END") ) { 
+							x = Float.valueOf(line.substring(line.indexOf(']')+1, line.indexOf(',')));
+							y = Float.valueOf(line.substring(line.indexOf(',')+1));
+							templater.setEndPoint(x, y); 
+						}
+						if( property.toString().equalsIgnoreCase("DELIVERY") ) { 
+							String adm =line.substring(line.indexOf(']')+1);
+							templater.setDeliveryMethod(AbilityDeliveryMethod.valueOf(adm));
+						}
+						property.setLength(0);
+					}
+					// Create animation from info
+					templater.setAnimation(new Animation(templater.getSpriteSheet(), x1, y1, x2, y2, true, templater.getSpeed(), false));
+						
+					
+					if( !duplicant ) {
+						DungeonDigger.ABILITY_TEMPLATES.put(templater.getName(), templater);
+						Logger.getAnonymousLogger().info("Archived ability template: " + templater.getName());
+					}
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch( NumberFormatException e ) {
+					e.printStackTrace();
+				} catch( SlickException e ) {
+					e.printStackTrace();
+				}
+			}
+		}
+		ABILITY_FACTORY.init();
 	}
 }

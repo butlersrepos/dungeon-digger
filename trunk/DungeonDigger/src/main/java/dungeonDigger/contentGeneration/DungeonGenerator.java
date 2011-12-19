@@ -16,6 +16,7 @@ import org.newdawn.slick.geom.Vector2f;
 import dungeonDigger.contentGeneration.GameSquare;
 import dungeonDigger.contentGeneration.Hallway;
 import dungeonDigger.contentGeneration.Room;
+import dungeonDigger.entities.Ability;
 import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.Enums.BorderCheck;
 import dungeonDigger.Enums.Direction;
@@ -31,11 +32,14 @@ public class DungeonGenerator {
 	private Random r = new Random(System.currentTimeMillis());
 	private Vector<Room> roomList = new Vector<Room>();
 	private HashMap<Integer, Room> roomDefinitionMap = new HashMap<Integer, Room>();
-	private boolean isInitialized = false;	
+	private boolean isInitialized = false, inView;	
 	private Image roomWallImage, dirtFloorImage, roomFloorImage, dirtWallImage, entranceImage;
-	private static final int ratioX = 99;
-	private static final int ratioY = 82;
+	private static final int ratioCol = 99;
+	private static final int ratioRow = 82;
 	private Vector2f entrance;
+	private HashSet<Point> corners = new HashSet<Point>(4);
+	private Rectangle viewPort;
+	private NetworkPlayer guy;
 	
 	public DungeonGenerator() {	
 		roomWallImage = DungeonDigger.IMAGES.get("roomWallImage");
@@ -70,45 +74,67 @@ public class DungeonGenerator {
 	
 	public void renderDungeon(GameContainer container, Graphics g) {
 		if( !this.isInitialized() ){ return; }
-		NetworkPlayer guy = DungeonDigger.myCharacter;
-		Rectangle viewPort = new Rectangle( guy.getPlayerXCoord() - container.getWidth()/2, guy.getPlayerYCoord() - container.getHeight()/2 - 60,
-												container.getWidth() + guy.getIcon().getWidth(), container.getHeight() + guy.getIcon().getHeight());
-		HashSet<Point> corners = new HashSet<Point>(4);
-		boolean inView = false;
+		guy = DungeonDigger.myCharacter;
+		viewPort = new Rectangle(guy.getPlayerXCoord() - container.getWidth()/2
+								,guy.getPlayerYCoord() - container.getHeight()/2 - 60
+								,container.getWidth() + guy.getIcon().getWidth()
+								,container.getHeight() + guy.getIcon().getHeight());
+		corners.clear();
+		inView = false;
+		for(int i = 0; i < 20; i++){ System.out.println(); }
+		System.out.println("Player at pixelX: " + guy.getPlayerXCoord() + " pixelY: " + guy.getPlayerYCoord());
+		System.out.println("Player at X: " + guy.getPlayerXCoord()/ratioRow + " Y: " + guy.getPlayerYCoord()/ratioCol);		
+		System.out.println("ViewDistance in X tiles: " + (int)viewPort.getWidth()/2/ratioRow + " and Y tiles: " + (int)viewPort.getHeight()/2/ratioCol);
+		System.out.println("View Range: X from " + (guy.getPlayerXCoord()/ratioRow - (int)viewPort.getWidth()/2/ratioRow) + " - " + (guy.getPlayerXCoord()/ratioRow + (int)viewPort.getWidth()/2/ratioRow));
+		System.out.println("View Range: Y from " + (guy.getPlayerYCoord()/ratioCol - (int)viewPort.getHeight()/2/ratioCol) + " - " + (guy.getPlayerYCoord()/ratioCol + (int)viewPort.getHeight()/2/ratioCol));
 		
-		//////////////
-		// Draw map //
-		//////////////
-		for(int row = 0; row < dungeonHeight; row++) {
-			for(int col = 0; col < dungeonWidth; col++) {
+		// Drawing Map; We only check the tiles within the view range of the player to see if they should apear
+		// We automatically render all tiles within 1 tile of the player
+		for(int col = (guy.getPlayerXCoord()/ratioCol - (int)viewPort.getWidth()/2/ratioCol - 1); 
+				col <= (guy.getPlayerXCoord()/ratioCol + (int)viewPort.getWidth()/2/ratioCol + 1); 
+				col++) {
+			for(int row = (guy.getPlayerYCoord()/ratioRow - (int)viewPort.getHeight()/2/ratioRow - 1); 
+					row <= (guy.getPlayerYCoord()/ratioRow + (int)viewPort.getHeight()/2/ratioRow); 
+					row++) {
+				if( row < 0 || row > dungeonHeight || col < 0 || col > dungeonWidth ) { continue; }
 				inView = false;
-				// Get the cornerpoints of the tile in question
-				corners.add(new Point(col*ratioX, row*ratioY));
-				corners.add(new Point((col+1)*ratioX, row*ratioY));
-				corners.add(new Point((col+1)*ratioX, (row+1)*ratioY));
-				corners.add(new Point(col*ratioX, (row+1)*ratioY));
-				
-				// See if it's in our screen
-				for( Point p : corners ) {
-					if( viewPort.contains((float)p.getX(), (float)p.getY())) {
-						inView = true;
-						break;
+				if( Math.abs(row - guy.getPlayerXCoord()/ratioRow) <= 1 
+						&& Math.abs(col - guy.getPlayerYCoord()/ratioCol) <= 1 ) {
+					inView = true;
+				} else {
+					// Get the cornerpoints of the tile in question
+					corners.add(new Point(col*ratioCol, row*ratioRow));
+					corners.add(new Point((col+1)*ratioCol, row*ratioRow));
+					corners.add(new Point((col+1)*ratioCol, (row+1)*ratioRow));
+					corners.add(new Point(col*ratioCol, (row+1)*ratioRow));
+					
+					// See if it's in our screen
+					for( Point p : corners ) {
+						if( viewPort.contains((float)p.getX(), (float)p.getY())) {
+							inView = true;
+							break;
+						}
 					}
 				}
-				corners.clear();
+					corners.clear();
 				
 				// If it's not, don't render it
 				if( !inView ) { continue; }
 
-				if( dungeon[row][col].getTileLetter() == 'W' ) {
-					dirtWallImage.draw(col*ratioX, row*ratioY);
-					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
-				} else if( dungeon[row][col].getTileLetter() == 'O' ) {
-					dirtFloorImage.draw(col*ratioX, row*ratioY);
-					//ShapeRenderer.draw(new Rectangle(col*ratioX, row*ratioY, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
-				} else if( dungeon[row][col].getTileLetter() == 'E' || dungeon[row][col].getTileLetter() == 'X' ) {
-					entranceImage.draw(col*ratioX, row*ratioY);
-				} 
+				switch(dungeon[row][col].getTileLetter()) {
+					case 'W':
+						dirtWallImage.draw(col*ratioCol, row*ratioRow);
+						//ShapeRenderer.draw(new Rectangle(col*ratioCol, row*ratioRow, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
+						break;
+					case 'O':
+						dirtFloorImage.draw(col*ratioCol, row*ratioRow);
+						//ShapeRenderer.draw(new Rectangle(col*ratioCol, row*ratioRow, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
+						break;
+					case 'E':
+					case 'X':
+						entranceImage.draw(col*ratioCol, row*ratioRow);
+						break;
+				}
 			}
 		}
 		for( NetworkPlayer player : this.getPlayerList() ) {
@@ -139,6 +165,10 @@ public class DungeonGenerator {
 		g.drawImage(guy.getIcon().getFlippedCopy( guy.isFlippedLeft(), false), guy.getPlayerXCoord(), guy.getPlayerYCoord());
 		//ShapeRenderer.draw(guy.getTerrainCollisionBox());
 
+		// Draw Abilities
+		for( Ability a : DungeonDigger.ACTIVE_ABILITIES ) {
+			a.render(container, g);
+		}
 	}
 	
 	/**
@@ -496,14 +526,14 @@ public class DungeonGenerator {
 			// Check each corner of this step
 			for( Vector2f point : cornerPoints ) {
 				// Out of bounds check
-				if( point.y < 0 || point.y > this.dungeonHeight*ratioY ||
-						point.x < 0 || point.x > this.dungeonWidth*ratioX ) {
+				if( point.y < 0 || point.y > this.dungeonHeight*ratioRow ||
+						point.x < 0 || point.x > this.dungeonWidth*ratioCol ) {
 					return goodToGo;
 				}
 				
 				// Figure out what map square this point falls on
-				int checkX = (int) (point.x / ratioX);
-				int checkY = (int) (point.y / ratioY);
+				int checkX = (int) (point.x / ratioCol);
+				int checkY = (int) (point.y / ratioRow);
 				
 				// If that's a wall square... no go, we're done here, return the number of steps that
 				// were OKed so far
@@ -570,24 +600,24 @@ public class DungeonGenerator {
 	public void setPlayerList(Vector<NetworkPlayer> playerList) {
 		this.playerList = playerList;
 	}
-	public int getRatioX() {
-		return ratioX;
+	public int getRatioCol() {
+		return ratioCol;
 	}
-	public int getRatioY() {
-		return ratioY;
+	public int getRatioRow() {
+		return ratioRow;
 	}
 
 	/**
 	 * @return Array coords of start point
 	 */
-	public Vector2f getEntranceSqure() {
+	public Vector2f getEntranceSquare() {
 		return entrance;
 	}
 	/**
 	 * @return Array coords of start point
 	 */
 	public Vector2f getEntranceCoords() {
-		return new Vector2f(entrance.x * ratioX, entrance.y * ratioY + ratioY/2);
+		return new Vector2f(entrance.x * ratioCol, entrance.y * ratioRow + ratioRow/2);
 	}
 
 	public void setMap(GameSquare[][] dungeon2) {

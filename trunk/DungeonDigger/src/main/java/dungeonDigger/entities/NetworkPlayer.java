@@ -6,6 +6,8 @@ import java.util.logging.Logger;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
+import org.newdawn.slick.KeyListener;
+
 import java.awt.Point;
 import org.newdawn.slick.geom.Rectangle;
 
@@ -15,28 +17,31 @@ import dungeonDigger.gameFlow.MultiplayerDungeon;
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.PlayerMovementUpdate;
 
-public class NetworkPlayer {
+public class NetworkPlayer implements KeyListener {
 	/* Actual stored fields of the Player */
 	private String name;
-	// Actual pixel measurement
+	/** Actual pixel measurement **/
 	private int playerXCoord = 500, playerYCoord = 500;				
-	// Image/avatar our player uses
-	private String iconName = "dwarf1";						
-	// If 0: die
+	/** Image/avatar short filename our player uses **/
+	private String iconName = "engy";						
+	/** If 0: die **/
 	private int hitPoints = 20;								
-	// How many pixels our character can move per step
+	/** How many pixels our character can move per step **/
 	private int speed = 3;		
 	
-	// Used for local rendering while we query server to validate movement
+	/** Used for local rendering while we query server to validate movement **/
 	transient private int proposedPlayerX, proposedPlayerY;	
 	transient private double reload = 500;
-	// Tracks time passes until we can fire
+	/** Tracks time passes until we can fire **/
 	transient private double reloadTimer = 0;				
-	// Tells if we're facing left
-	transient private boolean flippedLeft, pendingValidation;					
+	/** Tells if we're facing left **/
+	transient private boolean flippedLeft;
+	transient private boolean pendingValidation;					
 	transient private Image icon;
 	transient Logger logger = Logger.getLogger("NetworkPlayer");
 	transient LinkedList<Point> movementList = new LinkedList<Point>();
+	transient boolean movingUp, movingDown, movingLeft, movingRight;
+	transient Input inputs = null;
 	
 	public NetworkPlayer() {
 		if( iconName != null ) {		
@@ -45,44 +50,39 @@ public class NetworkPlayer {
 	}
 	
 	public void update(GameContainer container, int delta) {
-		Input inputs = container.getInput();
 		// TODO: get delta from server?
 		addReloadTimer(delta);
 		
 		// Entirely different logic and flow if we're server or client
 		// Client - must send packets and validate movements
 		// Server - simply moves and updates all players
-		handleMovement(container, delta, inputs);		
+		handleMovement(container, delta);		
 	}
 	
-	public void handleMovement(GameContainer container, int delta, Input inputs) {
+	public void handleMovement(GameContainer container, int delta) {
 		int movement;
 		// Reset our proposed coords so that one doesn't lag behind the other
 		this.setProposedPlayerX( this.getPlayerXCoord() );	
 		this.setProposedPlayerY( this.getPlayerYCoord() );
 		
 		/* PRESSED UP */
-		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveUp")) && 
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getTerrainCollisionBox(), speed))  > 0) {
+		if( movingUp && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getTerrainCollisionBox(), speed))  > 0) {
 			this.setProposedPlayerY( this.getPlayerYCoord() - movement );	
 		} 
 		/* PRESSED DOWN */
-		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveDown")) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getTerrainCollisionBox(), speed))  > 0) { 
+		if( movingDown && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getTerrainCollisionBox(), speed))  > 0) { 
 			this.setProposedPlayerY( this.getPlayerYCoord() + movement );
 		} 
 		/* PRESSED LEFT */
-		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveLeft")) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getTerrainCollisionBox(), speed))  > 0) { 
-			setFlippedLeft(true);	
+		if( movingLeft && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getTerrainCollisionBox(), speed))  > 0) { 
 			this.setProposedPlayerX( this.getPlayerXCoord() - movement );
+			setFlippedLeft(true);
 		} 
 		/* PRESSED RIGHT */
-		if (inputs.isKeyDown(DungeonDigger.KEY_BINDINGS.get("moveRight")) &&
-				(movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getTerrainCollisionBox(), speed))  > 0) {
-			setFlippedLeft(false);
+		if( movingRight && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getTerrainCollisionBox(), speed))  > 0) {
 			this.setProposedPlayerX( this.getPlayerXCoord() + movement );
-		} 
+			setFlippedLeft(false);
+		}	
 		// If we move then handle it based on the server scenario we're in
 		switch(DungeonDigger.STATE) {
 			case INGAME:
@@ -107,6 +107,9 @@ public class NetworkPlayer {
 	/***********************
 	 * GETTERS AND SETTERS *
 	 ***********************/
+	public Point getPlayerCenterPoint() {
+		return new Point( this.playerXCoord, this.playerYCoord);
+	}
 	public int getPlayerXCoord() {
 		return playerXCoord;
 	}
@@ -208,5 +211,66 @@ public class NetworkPlayer {
 	 */
 	public Rectangle getEntityCollisionBox() {
 		return new Rectangle(this.playerXCoord, this.playerYCoord + this.icon.getHeight()/2, this.icon.getWidth(), this.icon.getHeight()/2);
+	}
+
+	////////////////
+	// Key Events //
+	////////////////
+	@Override
+	public void setInput(Input input) { 
+		System.out.println("input set");
+		this.inputs = input; }
+
+	@Override
+	public boolean isAcceptingInput() { return this.inputs != null; }
+
+	@Override
+	public void inputEnded() { }
+
+	@Override
+	public void inputStarted() { }
+
+	@Override
+	public void keyReleased(int key, char c) { 
+		if( !DungeonDigger.KEY_BINDINGS.containsKey(key) ) { return; }
+		switch(DungeonDigger.KEY_BINDINGS.get(key)) {
+			case "moveUp":
+				movingUp = false;
+				break;
+			case "moveDown":
+				movingDown = false;
+				break;
+			case "moveLeft":
+				movingLeft = false;
+				break;
+			case "moveRight":
+				movingRight = false;
+				break;
+			default:
+				//DungeonDigger.ABILITY_FACTORY.use(DungeonDigger.SLOT_BINDINGS.get(DungeonDigger.KEY_BINDINGS.get(key)), this.getName());
+				break;
+		}
+	}
+
+	@Override
+	public void keyPressed(int key, char c) {
+		if( !DungeonDigger.KEY_BINDINGS.containsKey(key) ) { return; }
+		switch(DungeonDigger.KEY_BINDINGS.get(key)) {
+			case "moveUp":
+				movingUp = true;
+				break;
+			case "moveDown":
+				movingDown = true;
+				break;
+			case "moveLeft":
+				movingLeft = true;
+				break;
+			case "moveRight":
+				movingRight = true;
+				break;
+			default:
+				DungeonDigger.ABILITY_FACTORY.use(DungeonDigger.SLOT_BINDINGS.get(DungeonDigger.KEY_BINDINGS.get(key)), this.getName());
+				break;
+		}
 	}
 }

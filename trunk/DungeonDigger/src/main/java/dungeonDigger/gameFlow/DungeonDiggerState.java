@@ -7,6 +7,7 @@ import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
+import dungeonDigger.entities.Ability;
 import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.gameFlow.MultiplayerDungeon;
 
@@ -28,7 +29,8 @@ public abstract class DungeonDiggerState extends BasicGameState {
 			case INGAME:	
 			case HOSTINGGAME:
 			case SINGLEPLAYER:
-				DungeonDigger.myCharacter.update(container, delta);				
+				DungeonDigger.myCharacter.update(container, delta);		
+				for( Ability a : DungeonDigger.ACTIVE_ABILITIES ) { a.update(container, game, delta); }
 				break;
 		}
 	}

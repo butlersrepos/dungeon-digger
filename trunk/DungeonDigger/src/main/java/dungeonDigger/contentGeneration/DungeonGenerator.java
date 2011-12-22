@@ -81,13 +81,13 @@ public class DungeonGenerator {
 								,container.getHeight() + guy.getIcon().getHeight());
 		corners.clear();
 		inView = false;
-		for(int i = 0; i < 20; i++){ System.out.println(); }
+		/*for(int i = 0; i < 20; i++){ System.out.println(); }
 		System.out.println("Player at pixelX: " + guy.getPlayerXCoord() + " pixelY: " + guy.getPlayerYCoord());
 		System.out.println("Player at X: " + guy.getPlayerXCoord()/ratioRow + " Y: " + guy.getPlayerYCoord()/ratioCol);		
 		System.out.println("ViewDistance in X tiles: " + (int)viewPort.getWidth()/2/ratioRow + " and Y tiles: " + (int)viewPort.getHeight()/2/ratioCol);
 		System.out.println("View Range: X from " + (guy.getPlayerXCoord()/ratioRow - (int)viewPort.getWidth()/2/ratioRow) + " - " + (guy.getPlayerXCoord()/ratioRow + (int)viewPort.getWidth()/2/ratioRow));
 		System.out.println("View Range: Y from " + (guy.getPlayerYCoord()/ratioCol - (int)viewPort.getHeight()/2/ratioCol) + " - " + (guy.getPlayerYCoord()/ratioCol + (int)viewPort.getHeight()/2/ratioCol));
-		
+		*/
 		// Drawing Map; We only check the tiles within the view range of the player to see if they should apear
 		// We automatically render all tiles within 1 tile of the player
 		for(int col = (guy.getPlayerXCoord()/ratioCol - (int)viewPort.getWidth()/2/ratioCol - 1); 

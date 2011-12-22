@@ -23,7 +23,7 @@ public class Ability {
 	private SpriteSheet spriteSheet, hitFrames;
 	private Animation animation;
 	private String ownerName;
-	private Point startPoint, middlePoint, endPoint;
+	private Point startPoint, middlePoint, endPoint, currentPoint;
 	private int speed;
 	private AbilityDeliveryMethod adm;
 	
@@ -31,20 +31,34 @@ public class Ability {
 	
 	// Setup animation and such
 	public void init() {
-		
+		System.out.println("Ability inited");
+		this.currentPoint = DungeonDigger.myCharacter.getPlayerCenterPoint();
+		this.animation.setSpeed(1);
+		this.animation.restart();
 		inited = true;
 	}
-	
+	 
 	// Where the magick happens, lawl...
 	public void update(GameContainer container, StateBasedGame game, int delta) {
 		if( !inited ) { init(); }
 		if( !active ) { return; }
 		
+		System.out.println("At: " + currentPoint.x + ", " + currentPoint.y);
+		System.out.println("Current frame: " + animation.getFrame());
+		currentPoint.x += 5;
+		animation.update(delta);
+		
+		if( this.animation.isStopped() ) { 
+			System.out.println("stopped");
+			active = false; 
+			inited = false;
+		}
 	}
 	
 	public void render(GameContainer container, Graphics g) {
 		if( !active ) { return; }
-	
+		System.out.println("Ability " + name + " is rendering.");
+		animation.draw(currentPoint.x, currentPoint.y);
 	}
 	
 	/*
@@ -61,6 +75,10 @@ public class Ability {
 	public void setEndPoint(Point p) { this.endPoint = p; }
 	public void setEndPoint(float x, float y) { this.endPoint = new Point((int) x, (int)y); }
 	public Point getEndPoint() { return this.endPoint; }
+	
+	public void setCurrentPoint(Point p) { this.currentPoint = p; }
+	public void setCurrentPoint(float x, float y) { this.currentPoint = new Point((int) x, (int)y); }
+	public Point getCurrentPoint() { return this.currentPoint; }
 	
 	public void setName(String name) { this.name = name; }
 	public String getName() { return this.name; }

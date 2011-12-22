@@ -1,5 +1,7 @@
 package dungeonDigger.gameFlow;
 
+import java.util.Iterator;
+
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
@@ -30,7 +32,12 @@ public abstract class DungeonDiggerState extends BasicGameState {
 			case HOSTINGGAME:
 			case SINGLEPLAYER:
 				DungeonDigger.myCharacter.update(container, delta);		
-				for( Ability a : DungeonDigger.ACTIVE_ABILITIES ) { a.update(container, game, delta); }
+				Iterator<Ability> it = DungeonDigger.ACTIVE_ABILITIES.iterator();
+				while( it.hasNext() ) {
+					Ability a = it.next();
+					a.update(container, game, delta);
+					if( !a.isActive() ) { it.remove(); }
+				}
 				break;
 		}
 	}

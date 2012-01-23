@@ -36,7 +36,10 @@ public abstract class DungeonDiggerState extends BasicGameState {
 				while( it.hasNext() ) {
 					Ability a = it.next();
 					a.update(container, game, delta);
-					if( !a.isActive() ) { it.remove(); }
+					if( !a.isActive() && !a.isWaitingForClick() ) { 
+						System.out.println("Removing " + a.getName() + " from the updates.");
+						it.remove(); 
+					}
 				}
 				break;
 		}

@@ -7,7 +7,7 @@
 [ANIMENDY]1
 [DAMAGING]true
 [HITFRAMES]fireballs_hits_64x64.png
-[SPEED]150
+[SPEED]4
 [FRIENDLY]false
 [MOUSE]true
 [START]0,0

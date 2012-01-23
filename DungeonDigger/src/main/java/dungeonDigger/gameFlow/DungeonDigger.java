@@ -121,6 +121,7 @@ public class DungeonDigger extends StateBasedGame {
 			DungeonDigger.IMAGES.put("roomFloorImage",  new Image( ResourceLoader.getResourceAsStream("dirt floor 100x120.png"), "dirt floor 100x120.png", false));
 			DungeonDigger.IMAGES.put("dirtWallImage", new Image( ResourceLoader.getResourceAsStream("Wall Block Tall.png"), "Wall Block Tall.png", false));
 			DungeonDigger.IMAGES.put("entranceImage", new Image( ResourceLoader.getResourceAsStream("Stone Block.png"), "Stone Block.png", false));			
+			DungeonDigger.IMAGES.put("magicReticle", new Image("magic_reticle.png", new Color(255, 0, 255)));			
 		} catch (SlickException e) {
 			e.printStackTrace();
 		}
@@ -328,7 +329,7 @@ public class DungeonDigger extends StateBasedGame {
 						property.setLength(0);
 					}
 					// Create animation from info
-					templater.setAnimation(new Animation(templater.getSpriteSheet(), x1, y1, x2, y2, true, templater.getSpeed(), false));
+					templater.setAnimation(new Animation(templater.getSpriteSheet(), x1, y1, x2, y2, true, 100, false));
 						
 					
 					if( !duplicant ) {

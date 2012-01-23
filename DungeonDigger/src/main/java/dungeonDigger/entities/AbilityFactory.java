@@ -18,19 +18,19 @@ public class AbilityFactory {
 		}
 	}
 	
-	public Ability use(String abilityName, String ownerName) {
+	public Ability use(String abilityName, Agent owner) {
 		if( abilityName.equals("empty") ) { return null; }
 		for( Ability a : storedAbilities.get(abilityName) ) {
 			if( !a.isActive() ) {
 				System.out.println("Found ability: " + a.getName() + " and resetting it.");
-				a.reset(ownerName);
+				a.reset(owner);
 				return a;
 			}
 		}
 		System.out.println("No cached ability found, creating a " + abilityName);
 		Ability b = DungeonDigger.ABILITY_TEMPLATES.get(abilityName).clone();
 		storedAbilities.get(abilityName).add(b);
-		b.reset(ownerName);
+		b.reset(owner);
 		return b;
 	}
 }

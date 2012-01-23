@@ -5,6 +5,7 @@ import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.KeyListener;
+import org.newdawn.slick.MouseListener;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
@@ -12,7 +13,7 @@ import org.newdawn.slick.state.StateBasedGame;
 import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.entities.NetworkPlayer;
 
-public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListener {
+public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListener, MouseListener {
 	private boolean gen1Toggled, gen2Toggled;
 	private double[] hallsDensity = new double[]{1d, 0.95d};
 	private NetworkPlayer myPlayer;
@@ -30,6 +31,9 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 		myPlayer.setInput(container.getInput());
 		
 		MultiplayerDungeon.CLIENT_VIEW.getPlayerList().add(myPlayer);
+		MultiplayerDungeon.CLIENT_VIEW.generateDungeon1(99, 99, 0.25, hallsDensity);
+		myPlayer.setPlayerXCoord( (int)MultiplayerDungeon.CLIENT_VIEW.getEntranceCoords().x );
+		myPlayer.setPlayerYCoord( (int)MultiplayerDungeon.CLIENT_VIEW.getEntranceCoords().y );
 	}
 	
 	@Override
@@ -37,7 +41,7 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 		super.update(container, game, delta);
 		Input inputs = container.getInput();
 		
-		// 1 & 2 generate a layout
+		// 9 & 0 generate a layout
 		if( inputs.isKeyDown(Keyboard.KEY_9) ) {
 			if( !gen1Toggled ) {
 				MultiplayerDungeon.CLIENT_VIEW.generateDungeon1(99, 99, 0.25, hallsDensity);
@@ -61,5 +65,9 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 	@Override
 	public void keyReleased(int key, char c) {
 		myPlayer.keyReleased(key, c);
+	}
+	@Override
+	public void mouseClicked(int button, int x, int y, int clickCount) {
+		myPlayer.mouseClicked(button, x, y, clickCount);
 	}
 }

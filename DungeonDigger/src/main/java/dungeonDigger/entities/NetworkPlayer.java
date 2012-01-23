@@ -1,5 +1,6 @@
 package dungeonDigger.entities;
 
+import java.awt.Point;
 import java.util.LinkedList;
 import java.util.logging.Logger;
 
@@ -7,8 +8,8 @@ import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.KeyListener;
+import org.newdawn.slick.MouseListener;
 
-import java.awt.Point;
 import org.newdawn.slick.geom.Rectangle;
 
 import dungeonDigger.Enums.Direction;
@@ -17,9 +18,8 @@ import dungeonDigger.gameFlow.MultiplayerDungeon;
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.PlayerMovementUpdate;
 
-public class NetworkPlayer implements KeyListener {
+public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 	/* Actual stored fields of the Player */
-	private String name;
 	/** Actual pixel measurement **/
 	private int playerXCoord = 500, playerYCoord = 500;				
 	/** Image/avatar short filename our player uses **/
@@ -42,6 +42,7 @@ public class NetworkPlayer implements KeyListener {
 	transient LinkedList<Point> movementList = new LinkedList<Point>();
 	transient boolean movingUp, movingDown, movingLeft, movingRight;
 	transient Input inputs = null;
+	transient Point currentClick;
 	
 	public NetworkPlayer() {
 		if( iconName != null ) {		
@@ -162,12 +163,6 @@ public class NetworkPlayer implements KeyListener {
 	public boolean isFlippedLeft() {
 		return flippedLeft;
 	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getName() {
-		return name;
-	}
 	public String getIconName() {
 		return iconName;
 	}
@@ -269,8 +264,38 @@ public class NetworkPlayer implements KeyListener {
 				movingRight = true;
 				break;
 			default:
-				DungeonDigger.ABILITY_FACTORY.use(DungeonDigger.SLOT_BINDINGS.get(DungeonDigger.KEY_BINDINGS.get(key)), this.getName());
+				DungeonDigger.ABILITY_FACTORY.use(DungeonDigger.SLOT_BINDINGS.get(DungeonDigger.KEY_BINDINGS.get(key)), this);
 				break;
 		}
 	}
+
+	//////////////////
+	// Mouse Events //
+	//////////////////
+	@Override
+	public void mouseWheelMoved(int change) { }
+
+	@Override
+	public void mouseClicked(int button, int x, int y, int clickCount) {
+		System.out.println("Mouse clicked at: " + x + ", " + y);
+		if( this.getQueuedAbility() != null  && this.getQueuedAbility().isWaitingForClick() ) {
+			this.getQueuedAbility().setEndPoint(DungeonDigger.myCharacter.getPlayerXCoord() - 320 + x,
+												DungeonDigger.myCharacter.getPlayerYCoord() - 320 + y);
+			this.getQueuedAbility().setActive(true);
+			this.getQueuedAbility().setWaitingForClick(false);
+			this.setQueuedAbility(null);
+		}
+	}
+
+	@Override
+	public void mousePressed(int button, int x, int y) { }
+
+	@Override
+	public void mouseReleased(int button, int x, int y) { }
+
+	@Override
+	public void mouseMoved(int oldx, int oldy, int newx, int newy) { }
+
+	@Override
+	public void mouseDragged(int oldx, int oldy, int newx, int newy) { }
 }

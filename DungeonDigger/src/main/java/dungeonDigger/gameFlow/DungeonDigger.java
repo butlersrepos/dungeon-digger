@@ -31,11 +31,16 @@ import com.esotericsoftware.kryonet.Server;
 import dungeonDigger.Enums.AbilityDeliveryMethod;
 import dungeonDigger.entities.Ability;
 import dungeonDigger.entities.AbilityFactory;
+import dungeonDigger.entities.Mob;
+import dungeonDigger.entities.MobFactory;
 import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.network.ConnectionState;
 import dungeonDigger.network.Network.ChatPacket;
 import dungeonDigger.network.Network.TextPacket;
-
+/**
+ * Initial game state that loads most assets and maintains references to universal objects
+ * @author Eric
+ */
 public class DungeonDigger extends StateBasedGame {
 	public static NetworkPlayer myCharacter;
 	public static Server SERVER = new Server();
@@ -57,8 +62,11 @@ public class DungeonDigger extends StateBasedGame {
 	public static HashMap<Integer, String> KEY_BINDINGS = new HashMap<Integer, String>();
 	public static HashMap<String, String> SLOT_BINDINGS = new HashMap<String, String>();
 	public static HashMap<String, Ability> ABILITY_TEMPLATES = new HashMap<String, Ability>();
+	public static HashMap<String, Mob> MOB_TEMPLATES = new HashMap<String, Mob>();
 	public static Vector<Ability> ACTIVE_ABILITIES = new Vector<>();
 	public static AbilityFactory ABILITY_FACTORY = new AbilityFactory();
+	public static MobFactory MOB_FACTORY = new MobFactory();
+	
 	
 	public DungeonDigger(String title) {
 		super(title);
@@ -98,7 +106,8 @@ public class DungeonDigger extends StateBasedGame {
 		loadImages();
 		loadCharacterFiles();
 		loadAbilities();
-		loadSettings();		
+		loadSettings();	
+		loadMobs();
 	}
 	
 	public static void prepDirectories() {
@@ -251,14 +260,13 @@ public class DungeonDigger extends StateBasedGame {
 			System.out.println("NO ABILITY FILES FOUND! PLEASE REINSTALL.");
 			System.exit(-1);
 		} else {
-			// Create filter to ignore all but csf files
 			FilenameFilter abilFilesOnly = new FilenameFilter() {
 				public boolean accept(File dir, String name) {
 					if( name.endsWith(".adf") ) { return true; }
 					return false;
 				}				
 			};
-			// Try to load each player file
+			// Try to load each ability file
 			for( File f : file.listFiles( abilFilesOnly ) ){
 				try {
 					in = new BufferedReader(new FileReader(f));
@@ -348,5 +356,87 @@ public class DungeonDigger extends StateBasedGame {
 			}
 		}
 		ABILITY_FACTORY.init();
+	}
+	
+	public static void loadMobs() {
+		BufferedReader in;
+		File file = new File("data/mobs");
+		Mob templater = null;
+		
+		if( !file.isDirectory() ) { 
+			file.mkdir();
+			System.out.println("NO MOB FILES FOUND! PLEASE REINSTALL.");
+			System.exit(-1);
+		} else {
+			FilenameFilter mobFilesOnly = new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					if( name.endsWith(".mdf") ) { return true; }
+					return false;
+				}				
+			};
+			// Try to load each mob file
+			for( File f : file.listFiles( mobFilesOnly ) ){
+				try {
+					in = new BufferedReader(new FileReader(f));
+					String line = in.readLine();
+					String str1, str2, str3;
+					int x1=0, x2=0, y1=0, y2=0;
+					StringBuffer property = new StringBuffer();
+					boolean duplicant = false;
+					
+					if( !line.equalsIgnoreCase("[MOB]") ) {
+						Logger.getAnonymousLogger().info("Mob file: " + f.getName() + " seems corrupt. Skipping.");
+						continue;
+					}
+					
+					// Setup mob object
+					while( (line = in.readLine()) != null ) {
+						property.append(line.substring(1, line.indexOf("]")));
+						if( property.toString().equalsIgnoreCase("NAME") ) { 
+							templater = new Mob(line.substring(line.indexOf("]")+1));
+							if( DungeonDigger.MOB_TEMPLATES.get(templater.getName()) != null ) {
+								Logger.getAnonymousLogger().info("Duplicant Mob template found: " + templater.getName());
+								duplicant = true;
+								break;
+							}
+						}
+						if( property.toString().equalsIgnoreCase("SPRITESHEET") ) { 
+							str1 = line.substring(line.indexOf("]")+1);
+							str2 = str1.substring( str1.lastIndexOf('_')+1, str1.lastIndexOf('x'));
+							str3 = str1.substring(str1.lastIndexOf('x')+1, str1.lastIndexOf('.'));
+							templater.setSprites( new SpriteSheet(new Image(str1, Color.magenta), Integer.parseInt(str2), Integer.parseInt(str3))); 
+						}
+						if( property.toString().equalsIgnoreCase("ANIMSTARTX") ) { x1 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
+						if( property.toString().equalsIgnoreCase("ANIMSTARTY") ) { y1 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
+						if( property.toString().equalsIgnoreCase("ANIMENDX") ) { x2 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
+						if( property.toString().equalsIgnoreCase("ANIMENDY") ) { y2 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
+						if( property.toString().equalsIgnoreCase("SPEED") ) { templater.setSpeed( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("FRIENDLY") ) { templater.setFriendly( Boolean.valueOf(line.substring(line.indexOf("]")+1))); }
+						if( property.toString().equalsIgnoreCase("HITPOINTS") ) { 
+							templater.setMaxHitPoints( Integer.valueOf(line.substring(line.indexOf("]")+1))); 
+							templater.setCurrentHitPoints( Integer.valueOf(line.substring(line.indexOf("]")+1))); 
+						}
+						property.setLength(0);
+					}
+					// Create animation from info
+					templater.setAnimation(new Animation(templater.getSprites(), x1, y1, x2, y2, true, 100, false));
+						
+					
+					if( !duplicant ) {
+						DungeonDigger.MOB_TEMPLATES.put(templater.getName(), templater);
+						Logger.getAnonymousLogger().info("Archived mob template: " + templater.getName());
+					}
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch( NumberFormatException e ) {
+					e.printStackTrace();
+				} catch( SlickException e ) {
+					e.printStackTrace();
+				}
+			}
+		}
+		MOB_FACTORY.init();
 	}
 }

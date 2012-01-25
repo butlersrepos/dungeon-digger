@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.logging.Logger;
 
 import org.newdawn.slick.GameContainer;
+import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.KeyListener;
@@ -50,6 +51,7 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 		}
 	}
 	
+	@Override
 	public void update(GameContainer container, int delta) {
 		// TODO: get delta from server?
 		addReloadTimer(delta);
@@ -59,6 +61,9 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 		// Server - simply moves and updates all players
 		handleMovement(container, delta);		
 	}
+	
+	@Override
+	public void render(GameContainer c, Graphics g) {}
 	
 	public void handleMovement(GameContainer container, int delta) {
 		int movement;

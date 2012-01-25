@@ -1,6 +1,8 @@
 package dungeonDigger.entities;
 
-public class Agent {
+import org.newdawn.slick.geom.Vector2f;
+
+public abstract class Agent extends GameObject {
 	protected String name;
 	transient protected Ability queuedAbility;
 	

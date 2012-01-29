@@ -1,59 +1,59 @@
 package dungeonDigger.entities;
 
-import java.awt.Point;
 import java.util.LinkedList;
 import java.util.logging.Logger;
 
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Image;
+import org.newdawn.slick.Color;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.KeyListener;
 import org.newdawn.slick.MouseListener;
-
+import org.newdawn.slick.SlickException;
+import org.newdawn.slick.SpriteSheet;
 import org.newdawn.slick.geom.Rectangle;
+import org.newdawn.slick.geom.Vector2f;
 
 import dungeonDigger.Enums.Direction;
+import dungeonDigger.Tools.References;
 import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.gameFlow.MultiplayerDungeon;
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.PlayerMovementUpdate;
 
 public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
-	/* Actual stored fields of the Player */
-	/** Actual pixel measurement **/
-	private int playerXCoord = 500, playerYCoord = 500;				
+	/* Actual stored fields of the Player */			
 	/** Image/avatar short filename our player uses **/
 	private String iconName = "engy";						
 	/** If 0: die **/
 	private int hitPoints = 20;								
 	/** How many pixels our character can move per step **/
 	private int speed = 3;		
-	
 	/** Used for local rendering while we query server to validate movement **/
-	transient private int proposedPlayerX, proposedPlayerY;	
+	transient private float proposedPlayerX, proposedPlayerY;	
 	transient private double reload = 500;
 	/** Tracks time passes until we can fire **/
 	transient private double reloadTimer = 0;				
 	/** Tells if we're facing left **/
-	transient private boolean flippedLeft;
-	transient private boolean pendingValidation;					
-	transient private Image icon;
+	transient private boolean flippedLeft, pendingValidation;					
 	transient Logger logger = Logger.getLogger("NetworkPlayer");
-	transient LinkedList<Point> movementList = new LinkedList<Point>();
+	transient LinkedList<Vector2f> movementList = new LinkedList<Vector2f>();
 	transient boolean movingUp, movingDown, movingLeft, movingRight;
 	transient Input inputs = null;
-	transient Point currentClick;
+	transient Vector2f currentClick;
 	
 	public NetworkPlayer() {
-		if( iconName != null ) {		
-			this.setIcon( DungeonDigger.IMAGES.get(iconName) );
-		}
+		this.setName("MyPlayer");
+		try {
+			this.setSpriteSheet(new SpriteSheet(new Image("engy.png", Color.magenta), 60, 60));
+			this.getCollisionBox().setWidth(60);
+			this.getCollisionBox().setHeight(60);
+		} catch( SlickException e ) { e.printStackTrace(); }
 	}
 	
 	@Override
 	public void update(GameContainer container, int delta) {
-		// TODO: get delta from server?
 		addReloadTimer(delta);
 		
 		// Entirely different logic and flow if we're server or client
@@ -68,65 +68,57 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 	public void handleMovement(GameContainer container, int delta) {
 		int movement;
 		// Reset our proposed coords so that one doesn't lag behind the other
-		this.setProposedPlayerX( this.getPlayerXCoord() );	
-		this.setProposedPlayerY( this.getPlayerYCoord() );
+		this.setProposedPlayerX( this.getPosition().x );	
+		this.setProposedPlayerY( this.getPosition().y );
 		
 		/* PRESSED UP */
 		if( movingUp && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getTerrainCollisionBox(), speed))  > 0) {
-			this.setProposedPlayerY( this.getPlayerYCoord() - movement );	
+			this.setProposedPlayerY( this.getPosition().y - movement );	
 		} 
 		/* PRESSED DOWN */
 		if( movingDown && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getTerrainCollisionBox(), speed))  > 0) { 
-			this.setProposedPlayerY( this.getPlayerYCoord() + movement );
+			this.setProposedPlayerY( this.getPosition().y + movement );
 		} 
 		/* PRESSED LEFT */
 		if( movingLeft && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getTerrainCollisionBox(), speed))  > 0) { 
-			this.setProposedPlayerX( this.getPlayerXCoord() - movement );
+			this.setProposedPlayerX( this.getPosition().x - movement );
 			setFlippedLeft(true);
 		} 
 		/* PRESSED RIGHT */
 		if( movingRight && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getTerrainCollisionBox(), speed))  > 0) {
-			this.setProposedPlayerX( this.getPlayerXCoord() + movement );
+			this.setProposedPlayerX( this.getPosition().x + movement );
 			setFlippedLeft(false);
 		}	
 		// If we move then handle it based on the server scenario we're in
-		switch(DungeonDigger.STATE) {
+		switch(References.STATE) {
 			case INGAME:
 				if( this.movementList.size() == 0 ) {
-					this.movementList.add( new Point( this.getPlayerXCoord(), this.getPlayerYCoord() ) );
+					this.movementList.add( new Vector2f( this.getPosition().x, this.getPosition().y ) );
 				}
-				this.movementList.add( new Point( this.getProposedPlayerX(), this.getProposedPlayerY() ) );
-				DungeonDigger.CLIENT.sendTCP(new Network.PlayerMovementRequest(name, proposedPlayerX, proposedPlayerY));
-				this.setPlayerXCoord( this.getProposedPlayerX() );
-				this.setPlayerYCoord( this.getProposedPlayerY() );
+				this.movementList.add( new Vector2f( this.getProposedPlayerX(), this.getProposedPlayerY() ) );
+				References.CLIENT.sendTCP(new Network.PlayerMovementRequest(name, proposedPlayerX, proposedPlayerY));
+				this.setPosition( this.getProposedPlayerX(), this.getProposedPlayerY() );
 				break;
 			case HOSTINGGAME:
-				PlayerMovementUpdate packet = new Network.PlayerMovementUpdate(name, playerXCoord, playerYCoord);
-				DungeonDigger.SERVER.sendToAllTCP(packet);
+				PlayerMovementUpdate packet = new Network.PlayerMovementUpdate(name, this.getPosition().x, this.getPosition().y);
+				References.SERVER.sendToAllTCP(packet);
 				// NO BREAK; Allow to flow into SINGLEPLAYER condition
 			case SINGLEPLAYER:
-				this.setPlayerXCoord( this.getProposedPlayerX() );
-				this.setPlayerYCoord( this.getProposedPlayerY() );
+				this.setPosition( this.getProposedPlayerX(), this.getProposedPlayerY() );
 				break;
 		}
 	}
+	
 	/***********************
 	 * GETTERS AND SETTERS *
 	 ***********************/
-	public Point getPlayerCenterPoint() {
-		return new Point( this.playerXCoord, this.playerYCoord);
-	}
-	public int getPlayerXCoord() {
-		return playerXCoord;
-	}
-	public void setPlayerXCoord(int playerXCoord) {
-		this.playerXCoord = playerXCoord;
-	}
-	public int getPlayerYCoord() {
-		return playerYCoord;
-	}
-	public void setPlayerYCoord(int playerYCoord) {
-		this.playerYCoord = playerYCoord;
+	@Override
+	public float getWidth() {
+		return this.getIcon().getWidth();
+	}	
+	@Override
+	public float getHeight() {
+		return this.getIcon().getHeight();
 	}
 	public int getHitPoints() {
 		return hitPoints;
@@ -156,11 +148,8 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 	public double getReloadTimer() {
 		return reloadTimer;
 	}
-	public void setIcon(Image icon) {
-		this.icon = icon;
-	}
 	public Image getIcon() {
-		return icon;
+		return this.getSpriteSheet().getSprite(0, 0);
 	}
 	public void setFlippedLeft(boolean flippedLeft) {
 		this.flippedLeft = flippedLeft;
@@ -174,16 +163,16 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 	public void setIconName(String iconName) {
 		this.iconName = iconName;
 	}
-	public void setProposedPlayerX(int proposedPlayerX) {
+	public void setProposedPlayerX(float proposedPlayerX) {
 		this.proposedPlayerX = proposedPlayerX;
 	}
-	public int getProposedPlayerX() {
+	public float getProposedPlayerX() {
 		return proposedPlayerX;
 	}
-	public void setProposedPlayerY(int proposedPlayerY) {
+	public void setProposedPlayerY(float proposedPlayerY) {
 		this.proposedPlayerY = proposedPlayerY;
 	}
-	public int getProposedPlayerY() {
+	public float getProposedPlayerY() {
 		return proposedPlayerY;
 	}
 	public void setPendingValidation(boolean pendingValidation) {
@@ -192,10 +181,10 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 	public boolean isPendingValidation() {
 		return pendingValidation;
 	}
-	public LinkedList<Point> getMovementList() {
+	public LinkedList<Vector2f> getMovementList() {
 		return movementList;
 	}
-	public void setMovementList(LinkedList<Point> movementList) {
+	public void setMovementList(LinkedList<Vector2f> movementList) {
 		this.movementList = movementList;
 	}	
 	/**
@@ -203,14 +192,14 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 	 * @return
 	 */
 	public Rectangle getTerrainCollisionBox() {
-		return new Rectangle(this.playerXCoord, this.playerYCoord, this.icon.getWidth(), this.icon.getHeight());
+		return this.getCollisionBox();
 	}
 	/**
 	 * Used to calculate collision with players, projectiles, anything that isn't map terrain
 	 * @return
 	 */
 	public Rectangle getEntityCollisionBox() {
-		return new Rectangle(this.playerXCoord, this.playerYCoord + this.icon.getHeight()/2, this.icon.getWidth(), this.icon.getHeight()/2);
+		return new Rectangle(this.getPosition().x, this.getPosition().y + this.getIcon().getHeight()/2, this.getIcon().getWidth(), this.getIcon().getHeight()/2);
 	}
 
 	////////////////
@@ -232,8 +221,8 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 
 	@Override
 	public void keyReleased(int key, char c) { 
-		if( !DungeonDigger.KEY_BINDINGS.containsKey(key) ) { return; }
-		switch(DungeonDigger.KEY_BINDINGS.get(key)) {
+		if( !References.KEY_BINDINGS.containsKey(key) ) { return; }
+		switch(References.KEY_BINDINGS.get(key)) {
 			case "moveUp":
 				movingUp = false;
 				break;
@@ -254,8 +243,8 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 
 	@Override
 	public void keyPressed(int key, char c) {
-		if( !DungeonDigger.KEY_BINDINGS.containsKey(key) ) { return; }
-		switch(DungeonDigger.KEY_BINDINGS.get(key)) {
+		if( !References.KEY_BINDINGS.containsKey(key) ) { return; }
+		switch(References.KEY_BINDINGS.get(key)) {
 			case "moveUp":
 				movingUp = true;
 				break;
@@ -269,7 +258,7 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 				movingRight = true;
 				break;
 			default:
-				DungeonDigger.ABILITY_FACTORY.use(DungeonDigger.SLOT_BINDINGS.get(DungeonDigger.KEY_BINDINGS.get(key)), this);
+				References.ABILITY_FACTORY.use(References.SLOT_BINDINGS.get(References.KEY_BINDINGS.get(key)), this);
 				break;
 		}
 	}
@@ -284,8 +273,8 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 	public void mouseClicked(int button, int x, int y, int clickCount) {
 		System.out.println("Mouse clicked at: " + x + ", " + y);
 		if( this.getQueuedAbility() != null  && this.getQueuedAbility().isWaitingForClick() ) {
-			this.getQueuedAbility().setEndPoint(DungeonDigger.myCharacter.getPlayerXCoord() - 320 + x,
-												DungeonDigger.myCharacter.getPlayerYCoord() - 320 + y);
+			this.getQueuedAbility().setEndPoint(References.myCharacter.getPosition().x - 320 + x,
+												References.myCharacter.getPosition().y - 320 + y);
 			this.getQueuedAbility().setActive(true);
 			this.getQueuedAbility().setWaitingForClick(false);
 			this.setQueuedAbility(null);

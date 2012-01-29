@@ -1,4 +1,4 @@
-package dungeonDigger.contentGeneration;
+package dungeonDigger.Tools;
 
 import java.awt.Point;
 

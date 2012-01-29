@@ -1,10 +1,12 @@
 package dungeonDigger.network;
 
-import java.awt.Point;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.newdawn.slick.geom.Vector2f;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
@@ -13,9 +15,12 @@ import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 
+import dungeonDigger.Enums.GameState;
+import dungeonDigger.Tools.References;
 import dungeonDigger.contentGeneration.GameSquare;
+import dungeonDigger.entities.Agent;
+import dungeonDigger.entities.GameObject;
 import dungeonDigger.entities.NetworkPlayer;
-import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.gameFlow.MultiplayerDungeon;
 
 public class Network {
@@ -36,6 +41,8 @@ public class Network {
 		kryo.register(GameJoinPacket.class);
 		kryo.register(PlayerInfoPacket.class);
 		kryo.register(PlayerListPacket.class);
+		kryo.register(GameObject.class);
+		kryo.register(Agent.class);
 		kryo.register(NetworkPlayer.class);
 		kryo.register(NetworkPlayer[].class);
 		kryo.register(TilesResponse.class);
@@ -65,19 +72,19 @@ public class Network {
 				LoginRequest login = (LoginRequest)object;
 				// if already in, decline request
 				// TODO: kick previous?
-				if( DungeonDigger.ACTIVESESSIONNAMES.contains(login.account) ) { 
+				if( References.ACTIVESESSIONNAMES.contains(login.account) ) { 
 					connection.sendTCP(new LoginResponse(false));
 					return; 
 				}
 				// accept, add to active sessions, create playerinfo from account name
 				connection.sendTCP(new LoginResponse(true));
-				DungeonDigger.ACTIVESESSIONNAMES.add(login.account);
+				References.ACTIVESESSIONNAMES.add(login.account);
 				PlayerInfoPacket info = new PlayerInfoPacket();
 				
 				// if we have a record, use that info, otherwise new account created
-				if( DungeonDigger.CHARACTERBANK.get(login.account) != null ) {
+				if( References.CHARACTERBANK.get(login.account) != null ) {
 					logger.info("Login was a pre-existing player: " + login.account);					
-					info.player = DungeonDigger.CHARACTERBANK.get(login.account);
+					info.player = References.CHARACTERBANK.get(login.account);
 					connection.sendTCP(info);
 				} else {
 					logger.info("Login was a new player: " + login.account);
@@ -86,15 +93,14 @@ public class Network {
 					player.setHitPoints(20);
 					player.setSpeed(3);
 					player.setIconName("dwarf1.png");
-					player.setPlayerXCoord(0);
-					player.setPlayerYCoord(0);
+					player.setPosition(0, 0);
 					info.player = player;
-					DungeonDigger.CHARACTERBANK.put(login.account, player);
+					References.CHARACTERBANK.put(login.account, player);
 					connection.sendTCP(info);
 				}
 				// we're a server now if we weren't before, setup lobby
 				// TODO: alter to accomodate real-time joining
-				DungeonDigger.STATE = ConnectionState.SERVING;						
+				References.STATE = ConnectionState.SERVING;						
 				logger.info("Sent text packet");
 				connection.sendTCP(new TextPacket("Dungeon Lobby", 75, 75, 0));
 			}
@@ -102,42 +108,41 @@ public class Network {
 			// TODO: keep up to 100? allow client to change chat size
 			if( object instanceof ChatPacket ) {
 				logger.info("Recieved a chat packet.");
-				DungeonDigger.CHATS.add((ChatPacket)object);
+				References.CHATS.add((ChatPacket)object);
 				logger.info("Sent ech of chat to all users.");
 				if( connection.getEndPoint() instanceof Server ) {
 					((Server)connection.getEndPoint()).sendToAllTCP(object);
 				}
-				if( DungeonDigger.CHATS.size() > 10 ) { DungeonDigger.CHATS.remove(); }
+				if( References.CHATS.size() > 10 ) { References.CHATS.remove(); }
 			}
 			// Handle perma-texts to display on the screen(scores, global msgs, etc)
 			if( object instanceof TextPacket ) {
 				logger.info("Recieved a text packet.");
-				DungeonDigger.TEXTS.add( (TextPacket)object );
+				References.TEXTS.add( (TextPacket)object );
 			}
 			// Signoff - remove them from active sessions
 			if( object instanceof SignOff ) {
 				logger.info("Recieved a sign off packet.");
-				DungeonDigger.ACTIVESESSIONNAMES.remove( ((SignOff)object).account );
+				References.ACTIVESESSIONNAMES.remove( ((SignOff)object).account );
 				logger.info("Closing connection");
 				connection.close();
 			}
 			// Movement request - validate or invalidate to client
 			if( object instanceof PlayerMovementRequest ) {
 				PlayerMovementRequest packet = (PlayerMovementRequest)object;
-				int x = packet.x / MultiplayerDungeon.CLIENT_VIEW.getRatioRow();
-				int y = packet.y / MultiplayerDungeon.CLIENT_VIEW.getRatioCol();
+				int x = (int)packet.x / MultiplayerDungeon.CLIENT_VIEW.getRatioRow();
+				int y = (int)packet.y / MultiplayerDungeon.CLIENT_VIEW.getRatioCol();
 				logger.info("Recieved a player movement request packet for " + packet.player + " to move to " + "X:" + packet.x + " Y:" + packet.y);
 				boolean passable = MultiplayerDungeon.CLIENT_VIEW.dungeon[y][x].isPassable();
 				logger.info("Position was passable: " + passable);
 				if( passable ) {					
-					for( NetworkPlayer player : MultiplayerDungeon.CLIENT_VIEW.playerList) {
+					for( NetworkPlayer player : References.PLAYER_LIST) {
 						if( player.getName().equalsIgnoreCase(packet.player)) {
-							player.setPlayerXCoord(packet.x);
-							player.setPlayerYCoord(packet.y);
+							player.setPosition(packet.x, packet.y);
 						}
 					}
 					connection.sendTCP(new PlayerMovementResponse(true));
-					DungeonDigger.SERVER.sendToAllExceptTCP(connection.getID(), new PlayerMovementUpdate(packet.player, packet.x, packet.y));
+					References.SERVER.sendToAllExceptTCP(connection.getID(), new PlayerMovementUpdate(packet.player, packet.x, packet.y));
 				} else {
 					connection.sendTCP(new PlayerMovementResponse(false));
 				}
@@ -152,44 +157,43 @@ public class Network {
 			logger.setLevel(Level.OFF);
 			if (object instanceof ChatPacket) {
 				logger.info("Recieved a chat packet");
-				DungeonDigger.CHATS.add((ChatPacket) object);
-				if (DungeonDigger.CHATS.size() > 10) {
-					DungeonDigger.CHATS.remove();
+				References.CHATS.add((ChatPacket) object);
+				if (References.CHATS.size() > 10) {
+					References.CHATS.remove();
 				}
 			}
 			if (object instanceof TextPacket) {
 				logger.info("Recieved a text packet");
-				DungeonDigger.TEXTS.add((TextPacket) object);
+				References.TEXTS.add((TextPacket) object);
 			}
 			if (object instanceof LoginResponse) {
 				logger.info("Recieved a login request. " + ((LoginResponse) object).response);
 				if (((LoginResponse) object).response) {
-					DungeonDigger.STATE = ConnectionState.CONNECTED;
+					References.STATE = ConnectionState.CONNECTED;
 				} else {
-					DungeonDigger.STATE = ConnectionState.DISCONNECTED;
+					References.STATE = ConnectionState.DISCONNECTED;
 				}
 			}
 			if (object instanceof GameJoinPacket) {
 				logger.info("Recieved a game join packet");
-				DungeonDigger.STATE = ConnectionState.JOININGGAME;
-				DungeonDigger.CHOSEN_GAME_STATE = ((GameJoinPacket) object).gameStateId;
+				References.STATE = ConnectionState.JOININGGAME;
+				References.CHOSEN_GAME_STATE = GameState.values()[((GameJoinPacket) object).gameStateId];
 				logger.info("Process game join packet.");
 			}
 			if (object instanceof GameStartPacket) {
 				logger.info("Recieved a game start packet.");
-				DungeonDigger.STATE = ConnectionState.INGAME;
-				DungeonDigger.myCharacter.setPlayerXCoord( ((GameStartPacket)object).x );
-				DungeonDigger.myCharacter.setPlayerYCoord( ((GameStartPacket)object).y );
+				References.STATE = ConnectionState.INGAME;
+				References.myCharacter.setPosition(((GameStartPacket)object).x,((GameStartPacket)object).y);
 			}
 			if (object instanceof PlayerInfoPacket) {
 				logger.info("Recieved a player info packet");
 				PlayerInfoPacket packet = (PlayerInfoPacket) object;
-				DungeonDigger.myCharacter = packet.player;
+				References.myCharacter = packet.player;
 			}
 			if( object instanceof WholeMapPacket ) {
 				logger.info("Recieved a map info packet");
 				MultiplayerDungeon.CLIENT_VIEW.setMap(((WholeMapPacket)object).dungeon);		
-				MultiplayerDungeon.CLIENT_VIEW.playerList = ((WholeMapPacket)object).players;
+				References.PLAYER_LIST = ((WholeMapPacket)object).players;
 			}
 			if( object instanceof TileResponse ) {
 				TileResponse tilePacket = (TileResponse)object;
@@ -198,10 +202,9 @@ public class Network {
 			if( object instanceof PlayerMovementUpdate ) {				
 				PlayerMovementUpdate packet = (PlayerMovementUpdate)object;
 				logger.info("Recieved a player movement update packet " + packet.player + " moving to X:" + packet.x + ", Y:" + packet.y);
-				for( NetworkPlayer player : MultiplayerDungeon.CLIENT_VIEW.playerList) {
+				for( NetworkPlayer player : References.PLAYER_LIST) {
 					if( player.getName().equalsIgnoreCase(packet.player)) {
-						player.setPlayerXCoord(packet.x);
-						player.setPlayerYCoord(packet.y);
+						player.setPosition(packet.x, packet.y);
 					}
 				}
 			}
@@ -209,31 +212,29 @@ public class Network {
 				PlayerMovementResponse packet = (PlayerMovementResponse)object;
 				logger.info("Received a player movement response packet " + packet.response);
 				if( packet.response ) {					
-					if( DungeonDigger.myCharacter.getMovementList().size() > 1 ) {
-						DungeonDigger.myCharacter.getMovementList().remove();
+					if( References.myCharacter.getMovementList().size() > 1 ) {
+						References.myCharacter.getMovementList().remove();
 					} 
-					DungeonDigger.myCharacter.setPlayerXCoord( DungeonDigger.myCharacter.getProposedPlayerX() );
-					DungeonDigger.myCharacter.setPlayerYCoord( DungeonDigger.myCharacter.getProposedPlayerY() );
-					logger.info("Moved us to X:" + DungeonDigger.myCharacter.getPlayerXCoord() + " Y:" + DungeonDigger.myCharacter.getPlayerYCoord());
+					References.myCharacter.setPosition( References.myCharacter.getProposedPlayerX(), References.myCharacter.getProposedPlayerY() );
+					logger.info("Moved us to X:" + References.myCharacter.getPosition().x + " Y:" + References.myCharacter.getPosition().y);
 				} else {					
-					if( DungeonDigger.myCharacter.getMovementList().size() > 1 ) {
-						Point lastKnownGood = DungeonDigger.myCharacter.getMovementList().get(0);
-						DungeonDigger.myCharacter.setPlayerXCoord((int)lastKnownGood.getX());
-						DungeonDigger.myCharacter.setPlayerYCoord((int)lastKnownGood.getY());
+					if( References.myCharacter.getMovementList().size() > 1 ) {
+						Vector2f lastKnownGood = References.myCharacter.getMovementList().get(0);
+						References.myCharacter.setPosition(lastKnownGood.x, lastKnownGood.y);
 					} 
-					int x = DungeonDigger.myCharacter.getProposedPlayerX() / MultiplayerDungeon.CLIENT_VIEW.getRatioRow();
-					int y = DungeonDigger.myCharacter.getProposedPlayerY() / MultiplayerDungeon.CLIENT_VIEW.getRatioCol();
+					int x = (int)References.myCharacter.getProposedPlayerX() / MultiplayerDungeon.CLIENT_VIEW.getRatioRow();
+					int y = (int)References.myCharacter.getProposedPlayerY() / MultiplayerDungeon.CLIENT_VIEW.getRatioCol();
 					logger.info("Sending tile request for " + x + ", " + y);
 				}
 				logger.info("Resetting pendingValidation");
-				DungeonDigger.myCharacter.setPendingValidation( false );
+				References.myCharacter.setPendingValidation( false );
 			}
 			if( object instanceof PlayerListPacket ) {
 				logger.info("Recieved a player list packet.");
 				PlayerListPacket packet = (PlayerListPacket)object;
 				for( NetworkPlayer player : packet.players ) {
-					if( player.getName().equalsIgnoreCase(DungeonDigger.ACCOUNT_NAME)) { continue; }
-					MultiplayerDungeon.CLIENT_VIEW.playerList.add(player);
+					if( player.getName().equalsIgnoreCase(References.ACCOUNT_NAME)) { continue; }
+					References.PLAYER_LIST.add(player);
 				}
 			}
 		}
@@ -313,18 +314,18 @@ public class Network {
 		public NetworkPlayer player;
 	}
 	static public class PlayerListPacket {
-		public Vector<NetworkPlayer> players;
+		public ArrayList<NetworkPlayer> players;
 		public PlayerListPacket(){ }
-		public PlayerListPacket(Vector<NetworkPlayer> players){
+		public PlayerListPacket(ArrayList<NetworkPlayer> players){
 			this.players = players;
 		}
 		
 	}
 	static public class PlayerMovementUpdate {
 		public String player;
-		public int x, y; 
+		public float x, y; 
 		public PlayerMovementUpdate() {}
-		public PlayerMovementUpdate(String name, int newX, int newY) {
+		public PlayerMovementUpdate(String name, float newX, float newY) {
 			this.player = name;
 			this.x = newX;
 			this.y = newY;
@@ -332,9 +333,9 @@ public class Network {
 	}
 	static public class PlayerMovementRequest {
 		public String player;
-		public int x, y; 
+		public float x, y; 
 		public PlayerMovementRequest() {}
-		public PlayerMovementRequest(String name, int newX, int newY) {
+		public PlayerMovementRequest(String name, float newX, float newY) {
 			this.player = name;
 			this.x = newX;
 			this.y = newY;
@@ -368,6 +369,6 @@ public class Network {
 	}
 	static public class WholeMapPacket {
 		public GameSquare[][] dungeon;
-		public Vector<NetworkPlayer> players;
+		public ArrayList<NetworkPlayer> players;
 	}
 }

@@ -1,11 +1,6 @@
 package dungeonDigger.gameFlow;
 
 import java.awt.Font;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -22,6 +17,9 @@ import org.newdawn.slick.gui.TextField;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
+import dungeonDigger.Enums.GameState;
+import dungeonDigger.Tools.Constants;
+import dungeonDigger.Tools.References;
 import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.network.ConnectionState;
 import dungeonDigger.network.Network;
@@ -44,27 +42,26 @@ public class Lobby extends BasicGameState implements MouseListener{
 
 	@Override
 	public void enter(GameContainer container, StateBasedGame game){		
-		if( DungeonDigger.STATE == ConnectionState.LISTENING ) {
+		if( References.STATE == ConnectionState.LISTENING ) {
 			isServer = true;
-			Network.register(DungeonDigger.SERVER);
+			Network.register(References.SERVER);
 			// Load our character up
-			if( DungeonDigger.CHARACTERBANK.get(DungeonDigger.ACCOUNT_NAME) == null ) {
+			if( References.CHARACTERBANK.get(References.ACCOUNT_NAME) == null ) {
 				NetworkPlayer player = new NetworkPlayer();
-				player.setName(DungeonDigger.ACCOUNT_NAME);
+				player.setName(References.ACCOUNT_NAME);
 				player.setHitPoints(20);
 				player.setSpeed(3);
 				player.setIconName("dwarf1.png");
-				player.setPlayerXCoord(0);
-				player.setPlayerYCoord(0);
-				DungeonDigger.CHARACTERBANK.put(DungeonDigger.ACCOUNT_NAME, player);
+				player.setPosition(0, 0);
+				References.CHARACTERBANK.put(References.ACCOUNT_NAME, player);
 			}
-			DungeonDigger.ACTIVESESSIONNAMES.add(DungeonDigger.ACCOUNT_NAME);
-			DungeonDigger.myCharacter = DungeonDigger.CHARACTERBANK.get(DungeonDigger.ACCOUNT_NAME);
+			References.ACTIVESESSIONNAMES.add(References.ACCOUNT_NAME);
+			References.myCharacter = References.CHARACTERBANK.get(References.ACCOUNT_NAME);
 			startAsServer();
 		}
-		if( DungeonDigger.STATE == ConnectionState.CONNECTING ) {
-			Network.register(DungeonDigger.CLIENT);
-			startAsClient(DungeonDigger.IP_CONNECT);
+		if( References.STATE == ConnectionState.CONNECTING ) {
+			Network.register(References.CLIENT);
+			startAsClient(References.IP_CONNECT);
 		}
 		
 		// Create our chat box
@@ -90,22 +87,22 @@ public class Lobby extends BasicGameState implements MouseListener{
 				// Ignore empty chats
 				if( str.length() == 0 ) { return; }
 				// Truncate the message to the max chars
-				if( str.length() > DungeonDigger.MAX_MESSAGE_LENGTH ) { str = str.substring(0, DungeonDigger.MAX_MESSAGE_LENGTH); }
+				if( str.length() > Constants.MAX_MESSAGE_LENGTH ) { str = str.substring(0, Constants.MAX_MESSAGE_LENGTH); }
 				// Send packet
 				if( isServer ) { 
 					// Prepend our name
-					str = DungeonDigger.ACCOUNT_NAME + "(GameHost): " + str;
+					str = References.ACCOUNT_NAME + "(GameHost): " + str;
 					ChatPacket msg = new ChatPacket(str);
 					
-					DungeonDigger.CHATS.add(msg);
-					if( DungeonDigger.CHATS.size() > 10 ) { DungeonDigger.CHATS.remove(); }
+					References.CHATS.add(msg);
+					if( References.CHATS.size() > 10 ) { References.CHATS.remove(); }
 					
-					DungeonDigger.SERVER.sendToAllTCP( msg );
+					References.SERVER.sendToAllTCP( msg );
 				}
 				else { 
 					// Prepend our name
-					str = DungeonDigger.ACCOUNT_NAME + ": " + str;
-					DungeonDigger.CLIENT.sendTCP( new ChatPacket(str) ); 
+					str = References.ACCOUNT_NAME + ": " + str;
+					References.CLIENT.sendTCP( new ChatPacket(str) ); 
 				}
 				inputBox.setText("");
 			}
@@ -113,7 +110,7 @@ public class Lobby extends BasicGameState implements MouseListener{
 	}
 	
 	public void render(GameContainer container, StateBasedGame game, Graphics g) throws SlickException {
-		switch(DungeonDigger.STATE) {
+		switch(References.STATE) {
 			case LISTENING:
 				g.setColor(Color.white);
 				g.drawString("Waiting for a connection...", 75, 75);
@@ -143,7 +140,7 @@ public class Lobby extends BasicGameState implements MouseListener{
 	}
 
 	public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
-		Iterator<TextPacket> it = DungeonDigger.TEXTS.iterator();
+		Iterator<TextPacket> it = References.TEXTS.iterator();
 		while(it.hasNext()) {			
 			TextPacket t = it.next();
 			t.passedTime += delta;
@@ -152,29 +149,29 @@ public class Lobby extends BasicGameState implements MouseListener{
 			}
 		}		
 		
-		if( !isServer && DungeonDigger.STATE == ConnectionState.DISCONNECTED ) {
+		if( !isServer && References.STATE == ConnectionState.DISCONNECTED ) {
 			SignOff s = new SignOff();
-			s.account = DungeonDigger.ACCOUNT_NAME;
-			DungeonDigger.CLIENT.sendTCP(s);
-			game.enterState(DungeonDigger.MAINMENU);
+			s.account = References.ACCOUNT_NAME;
+			References.CLIENT.sendTCP(s);
+			game.enterState( GameState.MAIN_MENU.ordinal() );
 		}
 		
-		if( DungeonDigger.STATE == ConnectionState.LAUNCHINGGAME || DungeonDigger.STATE == ConnectionState.JOININGGAME) {
+		if( References.STATE == ConnectionState.LAUNCHINGGAME || References.STATE == ConnectionState.JOININGGAME) {
 			logger.info("Entering into MultiplayerDungeon state.");
-			game.enterState( DungeonDigger.CHOSEN_GAME_STATE );
+			game.enterState( References.CHOSEN_GAME_STATE.ordinal() );
 		}
 	}
 	
 	public void renderTexts(GameContainer c, Graphics g) {
-		for( TextPacket t: DungeonDigger.TEXTS ) {
+		for( TextPacket t: References.TEXTS ) {
 			g.setColor( Color.white );
 			g.drawString( t.text, t.x, t.y);
 		}
 	}
 	
 	public void renderChats(GameContainer c, Graphics g) {
-		for(int i = 0; i < DungeonDigger.CHATS.size(); i++) {
-			ChatPacket chat = DungeonDigger.CHATS.get(i);
+		for(int i = 0; i < References.CHATS.size(); i++) {
+			ChatPacket chat = References.CHATS.get(i);
 			g.setColor( Color.white );
 			g.drawString( chat.text, 85, 95+(i*20));
 		}
@@ -182,25 +179,25 @@ public class Lobby extends BasicGameState implements MouseListener{
 	
 	public void startAsServer() {
 		try { 
-			DungeonDigger.SERVER.start();
-			DungeonDigger.SERVER.bind(4444);
+			References.SERVER.start();
+			References.SERVER.bind(4444);
 			
 			// Listener log setup
-			DungeonDigger.SERVER.addListener( new Network.ServerListener() );
+			References.SERVER.addListener( new Network.ServerListener() );
 		} catch( IOException e ) { e.printStackTrace(); }
 	}
 	
 	public void startAsClient(String ip) {
 		try {
-			DungeonDigger.CLIENT.start();
-			DungeonDigger.CLIENT.connect(5000, ip, 4444);
+			References.CLIENT.start();
+			References.CLIENT.connect(5000, ip, 4444);
 									
-			DungeonDigger.CLIENT.addListener(new Network.ClientListener());
+			References.CLIENT.addListener(new Network.ClientListener());
 			
 			LoginRequest request = new LoginRequest();
-			request.account = DungeonDigger.ACCOUNT_NAME;
+			request.account = References.ACCOUNT_NAME;
 			logger.info("Sent a login request");
-			DungeonDigger.CLIENT.sendTCP(request);
+			References.CLIENT.sendTCP(request);
 		} catch ( IOException e ) {e.printStackTrace();}
 	}
 	
@@ -208,9 +205,9 @@ public class Lobby extends BasicGameState implements MouseListener{
 	@Override
 	public void mouseClicked(int button, int x, int y, int clickCount){
 		if( x >= 375 && x <= 500 && y >= 400 && y <= 435 && isServer ) {
-			DungeonDigger.CHOSEN_GAME_STATE = DungeonDigger.MULTIPLAYERDUNGEON;
-			DungeonDigger.STATE = ConnectionState.LAUNCHINGGAME;
-			DungeonDigger.SERVER.sendToAllTCP(new GameJoinPacket( DungeonDigger.CHOSEN_GAME_STATE ));
+			References.CHOSEN_GAME_STATE = GameState.MULTIPLAYERDUNGEON;
+			References.STATE = ConnectionState.LAUNCHINGGAME;
+			References.SERVER.sendToAllTCP(new GameJoinPacket( References.CHOSEN_GAME_STATE.ordinal() ));
 		}
 	}
 }

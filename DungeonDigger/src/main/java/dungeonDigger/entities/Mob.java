@@ -12,18 +12,32 @@ public class Mob extends Agent {
 	private Animation animation;
 	private Vector2f destination;
 	private int currentHitPoints, maxHitPoints, speed;
-	private boolean friendly = false, exists = false;
+	private boolean friendly = false, exists = false, inited = false;
 	
 	public Mob(String name) {
-		
+		this.setName(name);
+	}
+	
+	public void init() {
+		animation.setSpeed(0.3f);
+		animation.restart();
+		animation.setLooping(true);
+		System.out.println("Mob Inited");
+		inited = true;
 	}
 	
 	@Override
-	public void update(GameContainer c, int d) {
+	public void update(GameContainer c, int delta) {
+		if( !exists() ) { return; }
+		if( !inited ) { init(); }
+		
+		animation.update(delta);
 	}
 
 	@Override
 	public void render(GameContainer c, Graphics g) {
+		if( !exists() ) { return; }
+		animation.draw(this.getPosition().x - animation.getWidth()/2, this.getPosition().y - animation.getHeight()/2);
 	}
 	
 	@Override
@@ -32,13 +46,25 @@ public class Mob extends Agent {
 							this.animation.getCurrentFrame().getWidth(), this.animation.getCurrentFrame().getHeight() );
 	}
 
+	@Override
+	public float getWidth() {
+		return this.animation.getCurrentFrame().getWidth();
+	}
+	
+	@Override
+	public float getHeight() {
+		return this.animation.getCurrentFrame().getHeight();
+	}
+	
 	public void spawn(Vector2f pos) {
-		// TODO
+		this.setPosition(pos.copy());
+		setExists(true);
+		this.currentHitPoints = this.maxHitPoints;
 	}
 	
 	public Mob clone() {
 		Mob m = new Mob(this.name);
-		m.setAnimation(this.animation);
+		m.setAnimation(this.animation.copy());
 		m.setFriendly(this.friendly);
 		m.setMaxHitPoints(this.maxHitPoints);
 		m.setCurrentHitPoints(this.maxHitPoints);

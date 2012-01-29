@@ -6,7 +6,6 @@ import org.lwjgl.input.Keyboard;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
-import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.TrueTypeFont;
@@ -16,6 +15,8 @@ import org.newdawn.slick.gui.TextField;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
+import dungeonDigger.Enums.GameState;
+import dungeonDigger.Tools.References;
 import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.network.ConnectionState;
 
@@ -41,14 +42,14 @@ public class MainMenu extends BasicGameState {
 				accountName = tf.getText().trim().toLowerCase();
 				ip = iptf.getText().trim();
 				
-				DungeonDigger.ACCOUNT_NAME = accountName;
-				DungeonDigger.IP_CONNECT = ip;
-				switch(DungeonDigger.STATE) {
+				References.ACCOUNT_NAME = accountName;
+				References.IP_CONNECT = ip;
+				switch(References.STATE) {
 					case LOGGINGON:
-						DungeonDigger.STATE = ConnectionState.CONNECTING; 
+						References.STATE = ConnectionState.CONNECTING; 
 						break;
 					case SETTINGUP:
-						DungeonDigger.STATE = ConnectionState.LISTENING; 
+						References.STATE = ConnectionState.LISTENING; 
 						break;
 				}				
 			}
@@ -63,14 +64,14 @@ public class MainMenu extends BasicGameState {
 				accountName = tf.getText().trim().toLowerCase();
 				ip = iptf.getText().trim();
 				
-				DungeonDigger.ACCOUNT_NAME = accountName;
-				DungeonDigger.IP_CONNECT = ip;
-				switch(DungeonDigger.STATE) {
+				References.ACCOUNT_NAME = accountName;
+				References.IP_CONNECT = ip;
+				switch(References.STATE) {
 					case LOGGINGON:
-						DungeonDigger.STATE = ConnectionState.CONNECTING; 
+						References.STATE = ConnectionState.CONNECTING; 
 						break;
 					case SETTINGUP:
-						DungeonDigger.STATE = ConnectionState.LISTENING; 
+						References.STATE = ConnectionState.LISTENING; 
 						break;
 				}	
 			}
@@ -78,7 +79,7 @@ public class MainMenu extends BasicGameState {
 	}
 
 	public void render(GameContainer container, StateBasedGame game, Graphics g) throws SlickException {
-		switch(DungeonDigger.STATE) {
+		switch(References.STATE) {
 			case IDLE:
 				g.setColor(Color.white);
 				g.drawString("1. SINGLE PLAYER", 280, 180);
@@ -102,19 +103,19 @@ public class MainMenu extends BasicGameState {
 	public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
 		Input inputs = container.getInput();
 		
-		switch(DungeonDigger.STATE) {
+		switch(References.STATE) {
 			case SINGLEPLAYER:
-				DungeonDigger.myCharacter = new NetworkPlayer();
-				game.enterState(DungeonDigger.SINGLEPLAYERDUNGEON);
+				References.myCharacter = new NetworkPlayer();
+				game.enterState( GameState.SINGLEPLAYERDUNGEON.ordinal() );
 				break;
 			case LISTENING:
 			case CONNECTING:
-				game.enterState(DungeonDigger.LOBBY);
+				game.enterState(GameState.LOBBY.ordinal());
 				break;
 			case IDLE:				
-				if( inputs.isKeyDown(Keyboard.KEY_1) ) { DungeonDigger.STATE = ConnectionState.SINGLEPLAYER; }
-				if( inputs.isKeyDown(Keyboard.KEY_3) ) { DungeonDigger.STATE = ConnectionState.LOGGINGON; }
-				if( inputs.isKeyDown(Keyboard.KEY_4) ) { DungeonDigger.STATE = ConnectionState.SETTINGUP; }
+				if( inputs.isKeyDown(Keyboard.KEY_1) ) { References.STATE = ConnectionState.SINGLEPLAYER; }
+				if( inputs.isKeyDown(Keyboard.KEY_3) ) { References.STATE = ConnectionState.LOGGINGON; }
+				if( inputs.isKeyDown(Keyboard.KEY_4) ) { References.STATE = ConnectionState.SETTINGUP; }
 				if( inputs.isKeyDown(Keyboard.KEY_ESCAPE) ) { System.exit(0); }
 				break;
 		}

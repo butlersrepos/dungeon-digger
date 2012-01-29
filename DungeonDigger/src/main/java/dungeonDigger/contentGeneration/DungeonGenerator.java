@@ -8,46 +8,30 @@ import java.util.logging.Logger;
 
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
-import org.newdawn.slick.Image;
-import java.awt.Point;
 import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.geom.Vector2f;
 
-import dungeonDigger.contentGeneration.GameSquare;
-import dungeonDigger.contentGeneration.Hallway;
-import dungeonDigger.contentGeneration.Room;
-import dungeonDigger.entities.Ability;
-import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.Enums.BorderCheck;
 import dungeonDigger.Enums.Direction;
+import dungeonDigger.Tools.References;
+import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.GameStartPacket;
 
 public class DungeonGenerator {
-	public GameSquare[][] dungeon;
-	public Vector<NetworkPlayer> playerList = new Vector<NetworkPlayer>();
-	
-	private int dungeonHeight = 10, dungeonWidth = 10, ratio = 5;
+	public GameSquare[][] dungeon;	
+	private int dungeonHeight = 10, dungeonWidth = 10;
 	private Random r = new Random(System.currentTimeMillis());
 	private Vector<Room> roomList = new Vector<Room>();
 	private HashMap<Integer, Room> roomDefinitionMap = new HashMap<Integer, Room>();
-	private boolean isInitialized = false, inView;	
-	private Image roomWallImage, dirtFloorImage, roomFloorImage, dirtWallImage, entranceImage;
-	private static final int ratioCol = 99;
-	private static final int ratioRow = 82;
+	private boolean isInitialized = false;	
+	public static final int ratioCol = 99;
+	public static final int ratioRow = 82;
 	private Vector2f entrance;
-	private HashSet<Point> corners = new HashSet<Point>(4);
-	private Rectangle viewPort;
-	private NetworkPlayer guy;
+	private NetworkPlayer myGuy;
 	
-	public DungeonGenerator() {	
-		roomWallImage = DungeonDigger.IMAGES.get("roomWallImage");
-		dirtFloorImage = DungeonDigger.IMAGES.get("dirtFloorImage");
-		roomFloorImage = DungeonDigger.IMAGES.get("roomFloorImage");
-		dirtWallImage = DungeonDigger.IMAGES.get("dirtWallImage");
-		entranceImage = DungeonDigger.IMAGES.get("entranceImage");	
-		
+	public DungeonGenerator() {			
 		// Define our room templates
 		// TODO: Move to a file and import on startup? then patches can simply update external file
 		{
@@ -74,100 +58,31 @@ public class DungeonGenerator {
 	
 	public void renderDungeon(GameContainer container, Graphics g) {
 		if( !this.isInitialized() ){ return; }
-		guy = DungeonDigger.myCharacter;
-		viewPort = new Rectangle(guy.getPlayerXCoord() - container.getWidth()/2
-								,guy.getPlayerYCoord() - container.getHeight()/2 - 60
-								,container.getWidth() + guy.getIcon().getWidth()
-								,container.getHeight() + guy.getIcon().getHeight());
-		corners.clear();
-		inView = false;
-		/*for(int i = 0; i < 20; i++){ System.out.println(); }
-		System.out.println("Player at pixelX: " + guy.getPlayerXCoord() + " pixelY: " + guy.getPlayerYCoord());
-		System.out.println("Player at X: " + guy.getPlayerXCoord()/ratioRow + " Y: " + guy.getPlayerYCoord()/ratioCol);		
-		System.out.println("ViewDistance in X tiles: " + (int)viewPort.getWidth()/2/ratioRow + " and Y tiles: " + (int)viewPort.getHeight()/2/ratioCol);
-		System.out.println("View Range: X from " + (guy.getPlayerXCoord()/ratioRow - (int)viewPort.getWidth()/2/ratioRow) + " - " + (guy.getPlayerXCoord()/ratioRow + (int)viewPort.getWidth()/2/ratioRow));
-		System.out.println("View Range: Y from " + (guy.getPlayerYCoord()/ratioCol - (int)viewPort.getHeight()/2/ratioCol) + " - " + (guy.getPlayerYCoord()/ratioCol + (int)viewPort.getHeight()/2/ratioCol));
-		*/
+		myGuy = References.myCharacter;
 		// Drawing Map; We only check the tiles within the view range of the player to see if they should apear
 		// We automatically render all tiles within 1 tile of the player
-		for(int col = (guy.getPlayerXCoord()/ratioCol - (int)viewPort.getWidth()/2/ratioCol - 1); 
-				col <= (guy.getPlayerXCoord()/ratioCol + (int)viewPort.getWidth()/2/ratioCol + 1); 
-				col++) {
-			for(int row = (guy.getPlayerYCoord()/ratioRow - (int)viewPort.getHeight()/2/ratioRow - 1); 
-					row <= (guy.getPlayerYCoord()/ratioRow + (int)viewPort.getHeight()/2/ratioRow); 
-					row++) {
-				if( row < 0 || row > dungeonHeight || col < 0 || col > dungeonWidth ) { continue; }
-				inView = false;
-				if( Math.abs(row - guy.getPlayerXCoord()/ratioRow) <= 1 
-						&& Math.abs(col - guy.getPlayerYCoord()/ratioCol) <= 1 ) {
-					inView = true;
-				} else {
-					// Get the cornerpoints of the tile in question
-					corners.add(new Point(col*ratioCol, row*ratioRow));
-					corners.add(new Point((col+1)*ratioCol, row*ratioRow));
-					corners.add(new Point((col+1)*ratioCol, (row+1)*ratioRow));
-					corners.add(new Point(col*ratioCol, (row+1)*ratioRow));
-					
-					// See if it's in our screen
-					for( Point p : corners ) {
-						if( viewPort.contains((float)p.getX(), (float)p.getY())) {
-							inView = true;
-							break;
+		for(int z = 0; z <= 1; z++) {
+			for(int col = (int)(myGuy.getPosition().x/ratioCol - 5); col <= myGuy.getPosition().x/ratioCol + 5; col++) {
+				for(int row = (int)(myGuy.getPosition().y/ratioRow - 5); row <= myGuy.getPosition().y/ratioRow + 5; row++) {
+					if( row < 0 || row >= dungeonHeight || col < 0 || col >= dungeonWidth ) { continue; }
+					if( z == 0 ){
+						// Draw the scenery
+						this.dungeon[row][col].render(container, g);
+					} else {
+						// Draw the players
+						for( NetworkPlayer player : References.PLAYER_LIST ) {
+							if( (int)player.getPosition().x/ratioCol == col && (int)player.getPosition().y/ratioRow == row ) {
+								g.drawImage(player.getIcon().getFlippedCopy( player.isFlippedLeft(), false), player.getPosition().x, player.getPosition().y);
+								//ShapeRenderer.draw(player.getTerrainCollisionBox());
+							}
 						}
+						// Draw the MOBs
+						References.MOB_FACTORY.render(container, g, col, row);
+						// Draw Abilities
+						References.ABILITY_FACTORY.render(container, g, col, row);
 					}
 				}
-					corners.clear();
-				
-				// If it's not, don't render it
-				if( !inView ) { continue; }
-
-				switch(dungeon[row][col].getTileLetter()) {
-					case 'W':
-						dirtWallImage.draw(col*ratioCol, row*ratioRow);
-						//ShapeRenderer.draw(new Rectangle(col*ratioCol, row*ratioRow, dirtWallImage.getWidth(),dirtWallImage.getHeight()));
-						break;
-					case 'O':
-						dirtFloorImage.draw(col*ratioCol, row*ratioRow);
-						//ShapeRenderer.draw(new Rectangle(col*ratioCol, row*ratioRow, dirtFloorImage.getWidth(),dirtFloorImage.getHeight()));
-						break;
-					case 'E':
-					case 'X':
-						entranceImage.draw(col*ratioCol, row*ratioRow);
-						break;
-				}
 			}
-		}
-		for( NetworkPlayer player : this.getPlayerList() ) {
-			if( player == guy ) { continue; }
-			inView = false;
-			// Get the cornerpoints of the player in question
-			corners.add(new Point(player.getPlayerXCoord(), player.getPlayerYCoord()));
-			corners.add(new Point((player.getPlayerXCoord()+player.getIcon().getWidth()), player.getPlayerYCoord()));
-			corners.add(new Point((player.getPlayerXCoord()+player.getIcon().getWidth()), (player.getPlayerYCoord()+player.getIcon().getHeight())));
-			corners.add(new Point(player.getPlayerXCoord(), (player.getPlayerYCoord()+player.getIcon().getHeight())));
-			
-			// See if it's in our screen
-			for( Point p : corners ) {
-				if( viewPort.contains((float)p.getX(), (float)p.getY())) {
-					inView = true;
-					corners.clear();
-					break;
-				}
-			}
-			corners.clear();
-			
-			// If it's not, don't render it
-			if( !inView ) { continue; }
-			
-			g.drawImage(player.getIcon().getFlippedCopy( player.isFlippedLeft(), false), player.getPlayerXCoord(), player.getPlayerYCoord());
-		}
-		// Draw player
-		g.drawImage(guy.getIcon().getFlippedCopy( guy.isFlippedLeft(), false), guy.getPlayerXCoord(), guy.getPlayerYCoord());
-		//ShapeRenderer.draw(guy.getTerrainCollisionBox());
-
-		// Draw Abilities
-		for( Ability a : DungeonDigger.ACTIVE_ABILITIES ) {
-			a.render(container, g);
 		}
 	}
 	
@@ -186,8 +101,7 @@ public class DungeonGenerator {
 		
 		for(int i = 0; i < h; i++) {
 			for(int j = 0; j < w; j++){
-				result[i][j] = new GameSquare();
-				result[i][j].setTileLetter('W');
+				result[i][j] = new GameSquare('W', i, j);
 			}
 		}
 		this.setInitialized(true);
@@ -270,14 +184,14 @@ public class DungeonGenerator {
 	 * @param height
 	 * @param width
 	 */
-	private void generateRandomRoomWalk(double chance) { int diffX, diffY, startX, startY, destX, destY, i = 0, startedHalls = 0, halls = 0;
+	private void generateRandomRoomWalk(double chance) { 
+		int diffX, diffY, startX, startY, destX, destY, i = 0;
 		// Starting vertically (0) or horizontally (1)
 		int startDirection = 0;
 		
 		// Iterate over every room
 		for( Room startRoom : this.roomList ) {
 			if( r.nextDouble() >= chance ) { continue; }
-			startedHalls++;
 			// Grab a random room that's not this one
 			do {
 				i = r.nextInt(roomList.size());
@@ -349,7 +263,6 @@ public class DungeonGenerator {
 									currentSquare.setTileLetter('O');
 									currentSquare.setBelongsTo(currentHallway);
 								}
-								halls++;
 								break digHallway;
 							}
 						}
@@ -467,11 +380,11 @@ public class DungeonGenerator {
 		for(int i = 0; i < this.dungeonWidth; i++) {
 			for(int n = 0; n < this.dungeonHeight; n++) {
 				Logger.getAnonymousLogger().info("Sending a tile packet to clients.");
-				DungeonDigger.SERVER.sendToAllTCP(new Network.TileResponse(n, i, dungeon[n][i]));
+				References.SERVER.sendToAllTCP(new Network.TileResponse(n, i, dungeon[n][i]));
 			}
 		}
 		
-		DungeonDigger.SERVER.sendToAllTCP(new GameStartPacket((int)getEntranceCoords().x, (int)getEntranceCoords().y));
+		References.SERVER.sendToAllTCP(new GameStartPacket((int)getEntranceCoords().x, (int)getEntranceCoords().y));
 	}
 	/**
 	 * Returns true if one of the bordering square is owned by the passed owner room
@@ -593,12 +506,6 @@ public class DungeonGenerator {
 	}
 	public boolean isInitialized() {
 		return isInitialized;
-	}
-	public Vector<NetworkPlayer> getPlayerList() {
-		return playerList;
-	}
-	public void setPlayerList(Vector<NetworkPlayer> playerList) {
-		this.playerList = playerList;
 	}
 	public int getRatioCol() {
 		return ratioCol;

@@ -8,7 +8,8 @@ public enum Direction {
 	SOUTH (0, 1), 
 	SOUTHWEST (-1, 1), 
 	WEST (-1, 0), 
-	NORTHWEST (-1, -1);
+	NORTHWEST (-1, -1),
+	NONE (0, 0);
 	
 	private final int adjX, adjY;
 	Direction(int x, int y) {

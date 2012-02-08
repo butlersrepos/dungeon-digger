@@ -5,12 +5,15 @@ import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.SpriteSheet;
+import org.newdawn.slick.geom.Line;
 import org.newdawn.slick.geom.Vector2f;
 
 import dungeonDigger.Enums.AbilityDeliveryMethod;
+import dungeonDigger.Enums.Direction;
 import dungeonDigger.Tools.References;
 import dungeonDigger.Tools.Toolbox;
 import dungeonDigger.gameFlow.DungeonDigger;
+import dungeonDigger.gameFlow.MultiplayerDungeon;
 
 public class Ability extends GameObject {
 	public static Ability EMPTY_ABILITY = new Ability("Empty") {
@@ -30,6 +33,8 @@ public class Ability extends GameObject {
 	transient double distance = -1;
 	transient double intervals = 0;
 	transient int step = 0;
+	transient Vector2f collisionPoint = null;
+	transient boolean collided = false;
 	
 	public Ability(String name) { this.name = name; }
 	
@@ -93,6 +98,9 @@ public class Ability extends GameObject {
 			distance = -1;
 			step = 0;
 			animation.stop();
+			if( collided ) {
+				// TODO: explosion, secondary animation etc?
+			}
 			return;
 		}
 		if( distance == -1 ) { 
@@ -104,15 +112,40 @@ public class Ability extends GameObject {
 		}
 		int newX = (int)(startPoint.x + (endPoint.x - startPoint.x) * (step / intervals)); 
 		int newY = (int)(startPoint.y + (endPoint.y - startPoint.y) * (step / intervals)); 
-		
-		this.getPosition().x = newX;
-		this.getPosition().y = newY;
+
+		//Check terrain
+		Line path = new Line(this.getPosition().copy(), new Vector2f(newX, newY));
+		Direction dir = Toolbox.getCardinalDirection(path);
+		collisionPoint = null;
+		for( int row = 0; row != dir.adjY(); row += dir.adjY() ) {
+			for( int col = 0; col != dir.adjX(); col += dir.adjX() ) {
+				if( !MultiplayerDungeon.CLIENT_VIEW.dungeon[row][col].isPassable() ) {
+					if( path.intersects(MultiplayerDungeon.CLIENT_VIEW.dungeon[row][col].getCollisionBox() ) ) {
+						collisionPoint = Toolbox.lineIntersectsRectangle(path, MultiplayerDungeon.CLIENT_VIEW.dungeon[row][col].getCollisionBox());
+						collided = true;
+						break;
+					}
+				}
+			}
+			if( collided ) { break; }
+		}
+		// Move
+		if( collided ) {
+			this.setPosition(this.collisionPoint.copy());
+			collisionPoint = null;
+			step = (int)Math.ceil(intervals);
+			// Repopulate Quads
+			
+		} else {
+			this.getPosition().x = newX;
+			this.getPosition().y = newY;
+		}
+		// Check collisions
+		// Collide
 		step++;
 	}
 	
-	/*
-	 * GETTERS AND SETTERS AND BORING STUFF BELOW HERE
-	 */
+	/* GETTERS AND SETTERS AND BORING STUFF BELOW HERE  */
 	@Override
 	public float getWidth() {
 		return this.animation.getCurrentFrame().getWidth();

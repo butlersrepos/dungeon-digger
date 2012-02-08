@@ -1,5 +1,6 @@
 package dungeonDigger.contentGeneration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
@@ -15,7 +16,6 @@ import dungeonDigger.Enums.BorderCheck;
 import dungeonDigger.Enums.Direction;
 import dungeonDigger.Tools.References;
 import dungeonDigger.entities.NetworkPlayer;
-import dungeonDigger.gameFlow.DungeonDigger;
 import dungeonDigger.network.Network;
 import dungeonDigger.network.Network.GameStartPacket;
 
@@ -23,7 +23,7 @@ public class DungeonGenerator {
 	public GameSquare[][] dungeon;	
 	private int dungeonHeight = 10, dungeonWidth = 10;
 	private Random r = new Random(System.currentTimeMillis());
-	private Vector<Room> roomList = new Vector<Room>();
+	private ArrayList<Room> roomList = new ArrayList<Room>();
 	private HashMap<Integer, Room> roomDefinitionMap = new HashMap<Integer, Room>();
 	private boolean isInitialized = false;	
 	public static final int ratioCol = 99;
@@ -278,7 +278,6 @@ public class DungeonGenerator {
 	 * This method finds out how many identical cells this cell has bordering it
 	 * @param row Row of our target
 	 * @param col Column of our target
-	 * @param likeMe True if we want to know how many identical neighbors, False for how many dissimilar neighbors
 	 * @return How many we found that are identical
 	 */
 	public int friendlyNeighbors(int row, int col) {
@@ -360,16 +359,14 @@ public class DungeonGenerator {
 	
 	/**
 	 * Check if the cell is closed (is an X)
-	 * @param columnX
-	 * @param rowY
 	 * @return
 	 */
-	private boolean checkCell(int X, int Y) {
-		if( X < 0 || X >= this.dungeonHeight || Y < 0 || Y >= this.dungeonWidth ) {
+	private boolean checkCell(int row, int col) {
+		if( row < 0 || row >= this.dungeonHeight || col < 0 || col >= this.dungeonWidth ) {
 			return false;
 		}
 		
-		if( this.dungeon[X][Y].getTileLetter() == 'W' ) {
+		if( this.dungeon[row][col].getTileLetter() == 'W' ) {
 			return true;
 		}
 		
@@ -425,7 +422,7 @@ public class DungeonGenerator {
 	 * @param collisionBox The player's terrainCollisionBox
 	 * @param distance Speed or distance to attempt to move.
 	 * @return The amount of distance the character could move in that direction from 0 to distance(speed) passed in. */
-	public int canMove(Direction dir, Rectangle collisionBox, int distance) {		
+	public int canMove(Direction dir, Rectangle collisionBox, double distance) {		
 		int goodToGo = 0;
 		// Check each 'step' of our attempted movement from 1 - distance(ie speed)
 		for(int i = 1; i <= distance; i++) {

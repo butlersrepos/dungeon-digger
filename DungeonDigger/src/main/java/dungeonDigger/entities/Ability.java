@@ -1,5 +1,8 @@
 package dungeonDigger.entities;
 
+import java.util.ArrayList;
+import java.util.logging.Level;
+
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
@@ -12,7 +15,7 @@ import dungeonDigger.Enums.AbilityDeliveryMethod;
 import dungeonDigger.Enums.Direction;
 import dungeonDigger.Tools.References;
 import dungeonDigger.Tools.Toolbox;
-import dungeonDigger.gameFlow.DungeonDigger;
+import dungeonDigger.collisions.QuadCollisionEngine;
 import dungeonDigger.gameFlow.MultiplayerDungeon;
 
 public class Ability extends GameObject {
@@ -40,9 +43,9 @@ public class Ability extends GameObject {
 	
 	// Setup animation and such
 	public void init() {
-		System.out.println("Ability inited");
+		References.log.info("Ability inited");
 		if( adm == AbilityDeliveryMethod.CLICK_PROJECTILE || adm == AbilityDeliveryMethod.MOUSE_CONE || adm == AbilityDeliveryMethod.BLAST ) {
-			System.out.println("Setting waitForClick");
+			References.log.info("Setting waitForClick");
 			waitForClick = true;
 		} else { 
 			active = true;
@@ -53,6 +56,9 @@ public class Ability extends GameObject {
 		this.getPosition().y = startPoint.y;
 		animation.setSpeed(1);
 		animation.restart();
+		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
+								this.getAnimation().getCurrentFrame().getWidth(), 
+								this.getAnimation().getCurrentFrame().getHeight());
 		inited = true;
 	}
 	 
@@ -65,12 +71,15 @@ public class Ability extends GameObject {
 			startPoint.y = this.owner.getCenterPoint().y;
 			return; 
 		}
-		calculateMovement();
 		
 		animation.update(delta);
+		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
+								this.getAnimation().getCurrentFrame().getWidth(), 
+								this.getAnimation().getCurrentFrame().getHeight());
+		calculateMovement();
 		
 		if( this.animation.isStopped() ) { 
-			System.out.println("stopped");
+			References.log.fine("<==ABILITY==> Animation stopped.");
 			active = false; 
 			inited = false;
 		}
@@ -94,7 +103,7 @@ public class Ability extends GameObject {
 	
 	public void calculateMovement() {
 		if( step > intervals ) {
-			System.out.println("Steps > Intervals, stopping");
+			References.log.fine("Steps > Intervals, stopping");
 			distance = -1;
 			step = 0;
 			animation.stop();
@@ -104,17 +113,17 @@ public class Ability extends GameObject {
 			return;
 		}
 		if( distance == -1 ) { 
-			System.out.println("Setting up pathing items");
+			References.log.fine("Setting up pathing items");
 			distance = Toolbox.distanceBetween(startPoint, endPoint); 
 			intervals = distance / speed;
-			System.out.println("Distance: " + distance + " Intervals: " + intervals);
+			References.log.fine("Distance: " + distance + " Intervals: " + intervals);
 			step = 0;
 		}
 		int newX = (int)(startPoint.x + (endPoint.x - startPoint.x) * (step / intervals)); 
 		int newY = (int)(startPoint.y + (endPoint.y - startPoint.y) * (step / intervals)); 
 
 		//Check terrain
-		Line path = new Line(this.getPosition().copy(), new Vector2f(newX, newY));
+		/*Line path = new Line(this.getPosition().copy(), new Vector2f(newX, newY));
 		Direction dir = Toolbox.getCardinalDirection(path);
 		collisionPoint = null;
 		for( int row = 0; row != dir.adjY(); row += dir.adjY() ) {
@@ -122,27 +131,66 @@ public class Ability extends GameObject {
 				if( !MultiplayerDungeon.CLIENT_VIEW.dungeon[row][col].isPassable() ) {
 					if( path.intersects(MultiplayerDungeon.CLIENT_VIEW.dungeon[row][col].getCollisionBox() ) ) {
 						collisionPoint = Toolbox.lineIntersectsRectangle(path, MultiplayerDungeon.CLIENT_VIEW.dungeon[row][col].getCollisionBox());
+						System.out.println("HIT A WALL!");
 						collided = true;
 						break;
 					}
 				}
 			}
 			if( collided ) { break; }
-		}
+		}*/
 		// Move
 		if( collided ) {
 			this.setPosition(this.collisionPoint.copy());
 			collisionPoint = null;
 			step = (int)Math.ceil(intervals);
-			// Repopulate Quads
-			
 		} else {
 			this.getPosition().x = newX;
 			this.getPosition().y = newY;
 		}
-		// Check collisions
-		// Collide
+		// Repopulate Quads
+		if( !this.getParentNode().contains(this) ) {
+			QuadCollisionEngine.relocate(this);
+		}
+		// Check collisions			
+		ArrayList<GameObject> obstacles = QuadCollisionEngine.checkCollisions(this);
+		if( obstacles != null ) {
+			this.handleCollisions(obstacles);
+		}
+		
 		step++;
+	}
+	
+	private void handleCollisions( ArrayList<GameObject> objects ) {
+		References.log.fine("<==ABILITY==> Handling collisions with " + objects.size() + " objects.");
+		for( GameObject g : objects ) {
+			if( !this.isActive() ) { break; }
+			if( g instanceof Mob ) {
+				Mob m = (Mob)g;
+				References.log.fine("\n\n\n\n\n\n\n\n\n");
+				References.log.fine(this.getName() + " COLLIDED WITH A MOB - " + m.getName());
+				if( m.exists() ) { m.die(); }
+				this.end();
+			} else if( g instanceof NetworkPlayer ) {
+				NetworkPlayer p = (NetworkPlayer)g;
+				References.log.fine("\n\n\n\n\n\n\n\n\n");
+				References.log.fine(this.getName() + " COLLIDED WITH A PLAYER - " + p.getName());
+			} else if( g instanceof Ability ) {
+				Ability a = (Ability)g;
+				References.log.fine("\n\n\n\n\n\n\n\n\n");
+				References.log.fine(this.getName() + " COLLIDED WITH AN ABILITY - " + a.getName());
+			}
+		}
+	}
+	
+	public void end() {
+		References.log.fine(this.name + ": I am ending with owner: " + this.owner.getName());
+		this.owner = null;
+		this.active = false;
+		this.channeling = false;
+		this.waitForClick = false;
+		this.step = 0;
+		this.distance = -1;
 	}
 	
 	/* GETTERS AND SETTERS AND BORING STUFF BELOW HERE  */
@@ -218,11 +266,11 @@ public class Ability extends GameObject {
 	
 	/** Resets the animation frames and takes the first string (if there is one) as the new owner. **/
 	public void reset(Agent owner) {
-		System.out.println(this.name + ": I am reset with owner: " + owner.getName());
+		References.log.fine(this.name + ": I am reset with owner: " + owner.getName());
 		this.owner = owner;
 		this.active = false;
 		this.channeling = true;
-		this.inited = false;
+		this.init();
 		if( this.owner.getQueuedAbility() != null ) {
 			this.owner.getQueuedAbility().setActive(false);
 			this.owner.getQueuedAbility().setWaitingForClick(false);

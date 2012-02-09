@@ -11,6 +11,7 @@ import org.newdawn.slick.geom.Vector2f;
 import org.newdawn.slick.state.StateBasedGame;
 
 import dungeonDigger.Tools.References;
+import dungeonDigger.collisions.QuadCollisionEngine;
 import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.gameFlow.DungeonDigger;
 
@@ -42,13 +43,14 @@ public class MobFactory {
 		for( String name : roamingMobs.keySet() ) {
 			Iterator<Mob> it = roamingMobs.get(name).iterator();
 			while( it.hasNext() ) {
-				Mob a = it.next();
-				if((int)(a.getPosition().x/DungeonGenerator.ratioCol) == col
-						&& (int)(a.getPosition().y/DungeonGenerator.ratioRow) == row ) {
-					a.render(container, g);
+				Mob m = it.next();
+				if((int)(m.getPosition().x/DungeonGenerator.ratioCol) == col
+						&& (int)(m.getPosition().y/DungeonGenerator.ratioRow) == row ) {
+					m.render(container, g);
 				}
-				if( !a.exists() ) {
-					theCryoTubes.get(name).add(a);
+				if( !m.exists() ) {
+					theCryoTubes.get(name).add(m);
+					QuadCollisionEngine.removeObjectFromGame(m);
 					it.remove();
 				}
 			}
@@ -59,16 +61,18 @@ public class MobFactory {
 		if( mobName.equals("empty") ) { return null; }
 		for( Mob m : theCryoTubes.get(mobName) ) {
 			if( !m.exists() ) {
-				System.out.println("Found mob: " + m.getName() + " and spawning it.");
+				References.log.info("Found mob: " + m.getName() + " and spawning it.");
 				m.spawn(pos);
 				roamingMobs.get(mobName).add(m);
+				QuadCollisionEngine.addObjectToGame(m);
 				return m;
 			}
 		}
-		System.out.println("No cached mob found, creating a " + mobName);
+		References.log.info("No cached mob found, creating a " + mobName);
 		Mob b = References.MOB_TEMPLATES.get(mobName).clone();
 		b.spawn(pos);
-		roamingMobs.get(mobName).add(b);		
+		roamingMobs.get(mobName).add(b);	
+		QuadCollisionEngine.addObjectToGame(b);	
 		return b;
 	}
 

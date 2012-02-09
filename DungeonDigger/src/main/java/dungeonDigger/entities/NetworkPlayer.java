@@ -271,7 +271,7 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 
 	@Override
 	public void mouseClicked(int button, int x, int y, int clickCount) {
-		System.out.println("Mouse clicked at: " + x + ", " + y);
+		References.log.info("Mouse clicked at: " + x + ", " + y);
 		if( this.getQueuedAbility() != null  && this.getQueuedAbility().isWaitingForClick() ) {
 			this.getQueuedAbility().setEndPoint(References.myCharacter.getPosition().x - 320 + x,
 												References.myCharacter.getPosition().y - 320 + y);

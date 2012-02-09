@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.newdawn.slick.Image;
 
@@ -48,11 +50,15 @@ public class References {
 	public static AbilityFactory ABILITY_FACTORY = new AbilityFactory();
 	public static MobFactory MOB_FACTORY = new MobFactory();
 	public static QuadCollisionEngine QUAD_COLLISION_MANIFOLD;
+	public static Logger log = Logger.getLogger("REFERENCES");
+	
+	static {
+		log.setLevel(Level.OFF);		
+	}
 	
 	public static ArrayList<GameObject> getAllEntites() {
-		//System.out.println("References: List of AllEntites requested!");
+		log.finer("References: List of AllEntites requested!");
 		ArrayList<GameObject> list = new ArrayList<>();
-		//System.out.println("References: Adding elements onto my list beyond the " + tileSpan + " index.");
 		list.addAll( PLAYER_LIST );
 		for(String n : MobFactory.getRoamingMobs().keySet() ) {
 			list.addAll( MobFactory.getRoamingMobs().get(n) );
@@ -60,7 +66,7 @@ public class References {
 		for(String n : AbilityFactory.getActiveAbilities().keySet() ) {
 			list.addAll( AbilityFactory.getActiveAbilities().get(n) );
 		}
-		System.out.println("References: My entites list ended up being " + list.size() + " long!");
+		log.finer("References: My entites list ended up being " + list.size() + " long!");
 		return list;
 	}
 }

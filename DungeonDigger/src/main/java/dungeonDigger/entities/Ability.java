@@ -138,7 +138,7 @@ public class Ability extends GameObject {
 				}
 			}
 			if( collided ) { break; }
-		}*/
+		}*/ 
 		// Move
 		if( collided ) {
 			this.setPosition(this.collisionPoint.copy());

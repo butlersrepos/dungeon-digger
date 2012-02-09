@@ -10,6 +10,7 @@ import org.newdawn.slick.Graphics;
 import org.newdawn.slick.state.StateBasedGame;
 
 import dungeonDigger.Tools.References;
+import dungeonDigger.collisions.QuadCollisionEngine;
 import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.gameFlow.DungeonDigger;
 
@@ -46,6 +47,7 @@ public class AbilityFactory {
 				}
 				if( !a.isActive() && !a.isWaitingForClick() ) {
 					storedAbilities.get(name).add(a);
+					QuadCollisionEngine.removeObjectFromGame(a);
 					it.remove();
 				}
 			}
@@ -59,13 +61,15 @@ public class AbilityFactory {
 			Ability a = it.next();
 			activeAbilities.get(abilityName).add(a);
 			a.reset(owner);
+			QuadCollisionEngine.addObjectToGame(a);
 			it.remove();
 			return;
 		}
-		System.out.println("No cached ability found, creating a " + abilityName);
+		References.log.info("No cached ability found, creating a " + abilityName);
 		Ability b = References.ABILITY_TEMPLATES.get(abilityName).clone();
 		activeAbilities.get(abilityName).add(b);
 		b.reset(owner);
+		QuadCollisionEngine.addObjectToGame(b);
 	}
 
 	public static HashMap<String, Vector<Ability>> getActiveAbilities() {

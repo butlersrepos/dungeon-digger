@@ -7,6 +7,8 @@ import org.newdawn.slick.SpriteSheet;
 import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.geom.Vector2f;
 
+import dungeonDigger.Tools.References;
+
 public class Mob extends Agent {
 	private SpriteSheet sprites;
 	private Animation animation;
@@ -22,7 +24,10 @@ public class Mob extends Agent {
 		animation.setSpeed(0.3f);
 		animation.restart();
 		animation.setLooping(true);
-		System.out.println("Mob Inited");
+		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
+				this.getAnimation().getCurrentFrame().getWidth(), 
+				this.getAnimation().getCurrentFrame().getHeight());
+		References.log.info("Mob Inited");
 		inited = true;
 	}
 	
@@ -32,6 +37,9 @@ public class Mob extends Agent {
 		if( !inited ) { init(); }
 		
 		animation.update(delta);
+		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
+				this.getAnimation().getCurrentFrame().getWidth(), 
+				this.getAnimation().getCurrentFrame().getHeight());
 	}
 
 	@Override
@@ -60,6 +68,10 @@ public class Mob extends Agent {
 		this.setPosition(pos.copy());
 		setExists(true);
 		this.currentHitPoints = this.maxHitPoints;
+	}
+	
+	public void die() {
+		setExists(false);
 	}
 	
 	public Mob clone() {

@@ -52,21 +52,32 @@ public class QuadCollisionEngine {
 	
 	public static ArrayList<GameObject> checkCollisions(GameObject obj) {
 		References.log.finer("<==QCE==> Checking collisions for a(n) " + obj.getClass());
-		ArrayList<GameObject> obstacles = null;
-		QuadCollisionEngine parentNode = obj.getParentNode();
-		do {
-			for( GameObject g : parentNode.getList() ) {
-				if( g == obj ) { continue; }
-				if( g instanceof Mob ) {
-					if( g.getCollisionBox().intersects(obj.getCollisionBox()) ) {
-						if( obstacles == null ) { obstacles = new ArrayList<>(); }
-						References.log.finer("<==QCE==> Found a collision with a " + g.getClass() + "!");
-						obstacles.add(g);
-					}
+		ArrayList<GameObject> obstacles = new ArrayList<>();
+		QuadCollisionEngine currentNodeToCheck = obj.getParentNode();
+		obstacles.addAll( collisionChecker(obj, currentNodeToCheck) );
+		return obstacles;
+	}
+	
+	private static ArrayList<GameObject> collisionChecker(GameObject obj, QuadCollisionEngine node) {
+		ArrayList<GameObject> obstacles = new ArrayList<>();
+		
+		if( node.getChildren().size() > 0 ) {
+			for( QuadCollisionEngine q : node.getChildren() ) {
+				obstacles.addAll( collisionChecker(obj, q) );
+			}
+		} 
+		for( GameObject g : node.getList() ) {
+			if( g == obj ) { continue; }
+			if( g instanceof Mob ) {
+				if( g.getCollisionBox().intersects(obj.getCollisionBox()) ) {
+					if( obstacles == null ) { obstacles = new ArrayList<>(); }
+					References.log.finer("<==QCE==> Found a collision with a " + g.getClass() + "!");
+					obstacles.add(g);
 				}
 			}
-			parentNode = parentNode.getParent();
-		} while( parentNode != null );
+		}
+		
+		obstacles.trimToSize();
 		return obstacles;
 	}
 	
@@ -95,7 +106,8 @@ public class QuadCollisionEngine {
 	}
 	
 	private static QuadCollisionEngine findResponsibleParent(GameObject obj, QuadCollisionEngine startNode) {
-		if( loopStop > 10 ) {
+		if( loopStop > 10000 ) {
+			System.out.println("SHE'S SPIRALING OUT OF CONTROL CAPTAIN!");
 			References.log.severe("SHE'S SPIRALING OUT OF CONTROL CAPTAIN!");
 		}
 		References.log.finer("<==QCE==> Finding parent for a(n) " + obj.getClass());

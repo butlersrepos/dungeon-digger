@@ -149,9 +149,7 @@ public class Ability extends GameObject {
 			this.getPosition().y = newY;
 		}
 		// Repopulate Quads
-		if( !this.getParentNode().contains(this) ) {
-			QuadCollisionEngine.relocate(this);
-		}
+		QuadCollisionEngine.relocate(this);
 		// Check collisions			
 		ArrayList<GameObject> obstacles = QuadCollisionEngine.checkCollisions(this);
 		if( obstacles != null ) {

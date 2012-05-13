@@ -130,10 +130,10 @@ public class Network {
 			// Movement request - validate or invalidate to client
 			if( object instanceof PlayerMovementRequest ) {
 				PlayerMovementRequest packet = (PlayerMovementRequest)object;
-				int x = (int)packet.x / MultiplayerDungeon.CLIENT_VIEW.getRatioRow();
-				int y = (int)packet.y / MultiplayerDungeon.CLIENT_VIEW.getRatioCol();
+				int x = (int)packet.x / References.CLIENT_VIEW.getRatioRow();
+				int y = (int)packet.y / References.CLIENT_VIEW.getRatioCol();
 				logger.info("Recieved a player movement request packet for " + packet.player + " to move to " + "X:" + packet.x + " Y:" + packet.y);
-				boolean passable = MultiplayerDungeon.CLIENT_VIEW.dungeon[y][x].isPassable();
+				boolean passable = References.CLIENT_VIEW.dungeon[y][x].isPassable();
 				logger.info("Position was passable: " + passable);
 				if( passable ) {					
 					for( NetworkPlayer player : References.PLAYER_LIST) {
@@ -192,12 +192,12 @@ public class Network {
 			}
 			if( object instanceof WholeMapPacket ) {
 				logger.info("Recieved a map info packet");
-				MultiplayerDungeon.CLIENT_VIEW.setMap(((WholeMapPacket)object).dungeon);		
+				References.CLIENT_VIEW.setMap(((WholeMapPacket)object).dungeon);		
 				References.PLAYER_LIST = ((WholeMapPacket)object).players;
 			}
 			if( object instanceof TileResponse ) {
 				TileResponse tilePacket = (TileResponse)object;
-				MultiplayerDungeon.CLIENT_VIEW.dungeon[tilePacket.row][tilePacket.col].setTileLetter(tilePacket.tile.getTileLetter());
+				References.CLIENT_VIEW.dungeon[tilePacket.row][tilePacket.col].setTileLetter(tilePacket.tile.getTileLetter());
 			}
 			if( object instanceof PlayerMovementUpdate ) {				
 				PlayerMovementUpdate packet = (PlayerMovementUpdate)object;
@@ -222,8 +222,8 @@ public class Network {
 						Vector2f lastKnownGood = References.myCharacter.getMovementList().get(0);
 						References.myCharacter.setPosition(lastKnownGood.x, lastKnownGood.y);
 					} 
-					int x = (int)References.myCharacter.getProposedPlayerX() / MultiplayerDungeon.CLIENT_VIEW.getRatioRow();
-					int y = (int)References.myCharacter.getProposedPlayerY() / MultiplayerDungeon.CLIENT_VIEW.getRatioCol();
+					int x = (int)References.myCharacter.getProposedPlayerX() / References.CLIENT_VIEW.getRatioRow();
+					int y = (int)References.myCharacter.getProposedPlayerY() / References.CLIENT_VIEW.getRatioCol();
 					logger.info("Sending tile request for " + x + ", " + y);
 				}
 				logger.info("Resetting pendingValidation");

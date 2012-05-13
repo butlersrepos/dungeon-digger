@@ -48,7 +48,7 @@ public abstract class DungeonDiggerState extends BasicGameState {
 				g.translate(-References.myCharacter.getPosition().x+container.getWidth()/2, -References.myCharacter.getPosition().y+container.getHeight()/2);
 				
 				// The Dungeon handles rendering of the dungeon, players, mobs, abilities because it requires knowledge of all of them to render correctly
-				MultiplayerDungeon.CLIENT_VIEW.renderDungeon(container, g);
+				References.CLIENT_VIEW.renderDungeon(container, g);
 				// TODO: render HUD
 				
 				// Undo translation to render moving components (player, HUD)

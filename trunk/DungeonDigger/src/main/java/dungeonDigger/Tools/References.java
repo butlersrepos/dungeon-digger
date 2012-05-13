@@ -15,6 +15,7 @@ import com.esotericsoftware.kryonet.Server;
 
 import dungeonDigger.Enums.GameState;
 import dungeonDigger.collisions.QuadCollisionEngine;
+import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.contentGeneration.GameSquare;
 import dungeonDigger.entities.Ability;
 import dungeonDigger.entities.AbilityFactory;
@@ -51,6 +52,7 @@ public class References {
 	public static MobFactory MOB_FACTORY = new MobFactory();
 	public static QuadCollisionEngine QUAD_COLLISION_MANIFOLD;
 	public static Logger log = Logger.getLogger("REFERENCES");
+	public static DungeonGenerator CLIENT_VIEW;
 	
 	static {
 		log.setLevel(Level.OFF);		

@@ -421,8 +421,9 @@ public class DungeonGenerator {
 	/**@param dir Direction Enum, cardinal direction.
 	 * @param collisionBox The player's terrainCollisionBox
 	 * @param distance Speed or distance to attempt to move.
-	 * @return The amount of distance the character could move in that direction from 0 to distance(speed) passed in. */
+	 * @return The (positive) amount of distance the character could move in that direction from 0 to distance(speed) passed in. */
 	public int canMove(Direction dir, Rectangle collisionBox, double distance) {		
+		if( dir == Direction.NONE ) { return 0; }
 		int goodToGo = 0;
 		// Check each 'step' of our attempted movement from 1 - distance(ie speed)
 		for(int i = 1; i <= distance; i++) {

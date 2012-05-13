@@ -54,7 +54,6 @@ public class Ability extends GameObject {
 		startPoint.y = this.owner.getCenterPoint().y;
 		this.getPosition().x = startPoint.x;
 		this.getPosition().y = startPoint.y;
-		animation.setSpeed(1);
 		animation.restart();
 		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
 								this.getAnimation().getCurrentFrame().getWidth(), 
@@ -112,6 +111,7 @@ public class Ability extends GameObject {
 			}
 			return;
 		}
+		// This means we are jsut starting
 		if( distance == -1 ) { 
 			References.log.fine("Setting up pathing items");
 			distance = Toolbox.distanceBetween(startPoint, endPoint); 
@@ -149,7 +149,9 @@ public class Ability extends GameObject {
 			this.getPosition().y = newY;
 		}
 		// Repopulate Quads
-		QuadCollisionEngine.relocate(this);
+		if( !this.getParentNode().contains(this) || this.getParentNode().getChildren().size() > 0 ) {
+			QuadCollisionEngine.relocate(this);
+		}
 		// Check collisions			
 		ArrayList<GameObject> obstacles = QuadCollisionEngine.checkCollisions(this);
 		if( obstacles != null ) {

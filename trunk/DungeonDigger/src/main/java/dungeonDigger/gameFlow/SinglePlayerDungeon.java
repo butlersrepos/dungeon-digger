@@ -22,7 +22,7 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 	public int getID() { return 1; }
 
 	public void init(GameContainer container, StateBasedGame game) throws SlickException {
-		MultiplayerDungeon.CLIENT_VIEW = new DungeonGenerator();
+		References.CLIENT_VIEW = new DungeonGenerator();
 	}
 	
 	@Override
@@ -31,10 +31,10 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 		myPlayer.setInput(container.getInput());
 		
 		References.PLAYER_LIST.add(myPlayer);
-		MultiplayerDungeon.CLIENT_VIEW.generateDungeon1(99, 99, 0.25, hallsDensity);
-		myPlayer.setPosition( (int)MultiplayerDungeon.CLIENT_VIEW.getEntranceCoords().x, (int)MultiplayerDungeon.CLIENT_VIEW.getEntranceCoords().y );
+		References.CLIENT_VIEW.generateDungeon1(99, 99, 0.25, hallsDensity);
+		myPlayer.setPosition( (int)References.CLIENT_VIEW.getEntranceCoords().x, (int)References.CLIENT_VIEW.getEntranceCoords().y );
 		System.out.println(System.currentTimeMillis() + " - Initiating the Quad Collision Manifold!");
-		QuadCollisionEngine.initiateNodeZero(MultiplayerDungeon.CLIENT_VIEW.dungeon);
+		QuadCollisionEngine.initiateNodeZero(References.CLIENT_VIEW.dungeon);
 		System.out.println(System.currentTimeMillis() + " - Quad Collision Manifold successfully initiated!");
 	}
 	
@@ -47,14 +47,14 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 		// Z spawns a zombie
 		if( inputs.isKeyDown(Keyboard.KEY_9) ) {
 			if( !gen1Toggled ) {
-				MultiplayerDungeon.CLIENT_VIEW.generateDungeon1(99, 99, 0.25, hallsDensity);
-				myPlayer.setPosition( (int)MultiplayerDungeon.CLIENT_VIEW.getEntranceCoords().x, (int)MultiplayerDungeon.CLIENT_VIEW.getEntranceCoords().y );
+				References.CLIENT_VIEW.generateDungeon1(99, 99, 0.25, hallsDensity);
+				myPlayer.setPosition( (int)References.CLIENT_VIEW.getEntranceCoords().x, (int)References.CLIENT_VIEW.getEntranceCoords().y );
 				gen1Toggled = true;
 			}
 		} else { gen1Toggled = false; }
 		if( inputs.isKeyDown(Keyboard.KEY_0) ) {
 			if( !gen2Toggled ) {
-				MultiplayerDungeon.CLIENT_VIEW.generateDungeon2(99, 99, 50000, 4, 0.45, true);
+				References.CLIENT_VIEW.generateDungeon2(99, 99, 50000, 4, 0.45, true);
 				gen2Toggled = true;
 			}
 		} else { gen2Toggled = false; }

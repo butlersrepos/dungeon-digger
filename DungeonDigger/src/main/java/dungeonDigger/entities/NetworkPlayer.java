@@ -29,7 +29,7 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 	/** If 0: die **/
 	private int hitPoints = 20;								
 	/** How many pixels our character can move per step **/
-	private int speed = 3;		
+	private int speed = 6;		
 	/** Used for local rendering while we query server to validate movement **/
 	transient private float proposedPlayerX, proposedPlayerY;	
 	transient private double reload = 500;
@@ -72,20 +72,20 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 		this.setProposedPlayerY( this.getPosition().y );
 		
 		/* PRESSED UP */
-		if( movingUp && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.NORTH, this.getTerrainCollisionBox(), speed))  > 0) {
+		if( movingUp && (movement  = References.CLIENT_VIEW.canMove(Direction.NORTH, this.getTerrainCollisionBox(), speed))  > 0) {
 			this.setProposedPlayerY( this.getPosition().y - movement );	
 		} 
 		/* PRESSED DOWN */
-		if( movingDown && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.SOUTH, this.getTerrainCollisionBox(), speed))  > 0) { 
+		if( movingDown && (movement  = References.CLIENT_VIEW.canMove(Direction.SOUTH, this.getTerrainCollisionBox(), speed))  > 0) { 
 			this.setProposedPlayerY( this.getPosition().y + movement );
 		} 
 		/* PRESSED LEFT */
-		if( movingLeft && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.WEST, this.getTerrainCollisionBox(), speed))  > 0) { 
+		if( movingLeft && (movement  = References.CLIENT_VIEW.canMove(Direction.WEST, this.getTerrainCollisionBox(), speed))  > 0) { 
 			this.setProposedPlayerX( this.getPosition().x - movement );
 			setFlippedLeft(true);
 		} 
 		/* PRESSED RIGHT */
-		if( movingRight && (movement  = MultiplayerDungeon.CLIENT_VIEW.canMove(Direction.EAST, this.getTerrainCollisionBox(), speed))  > 0) {
+		if( movingRight && (movement  = References.CLIENT_VIEW.canMove(Direction.EAST, this.getTerrainCollisionBox(), speed))  > 0) {
 			this.setProposedPlayerX( this.getPosition().x + movement );
 			setFlippedLeft(false);
 		}	

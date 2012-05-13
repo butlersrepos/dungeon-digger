@@ -17,7 +17,6 @@ import dungeonDigger.network.Network;
 public class MultiplayerDungeon extends DungeonDiggerState {
 	private Vector2f startPos;
 	// Used for dungeon data of both, aside: "CLIENT" = viewable interface
-	public static DungeonGenerator CLIENT_VIEW;
 	private Logger logger = Logger.getLogger("DungeonDigger.MultiplayerDungeon");
 	
 	@Override
@@ -33,8 +32,8 @@ public class MultiplayerDungeon extends DungeonDiggerState {
 			
 			// Get a new dungeon
 			logger.info("Making dungeon");
-			CLIENT_VIEW = new DungeonGenerator();
-			CLIENT_VIEW.generateDungeon1(100, 100, 0.25 , new double[]{1.0, 0.75});
+			References.CLIENT_VIEW = new DungeonGenerator();
+			References.CLIENT_VIEW.generateDungeon1(100, 100, 0.25 , new double[]{1.0, 0.75});
 			
 			// Add all our active players info to the dungeon
 			logger.info("Adding players to it");
@@ -43,7 +42,7 @@ public class MultiplayerDungeon extends DungeonDiggerState {
 			}
 			
 			// Calculate the top left most open spot
-			startPos = CLIENT_VIEW.getEntranceCoords();
+			startPos = References.CLIENT_VIEW.getEntranceCoords();
 			// Set me there
 			References.myCharacter.setPosition((int)startPos.x, (int)startPos.y);
 			
@@ -52,7 +51,7 @@ public class MultiplayerDungeon extends DungeonDiggerState {
 			for( Connection c : References.SERVER.getConnections() ) {
 				c.setTimeout(0);
 			}
-			CLIENT_VIEW.serverSendMap();
+			References.CLIENT_VIEW.serverSendMap();
 			References.SERVER.sendToAllTCP(new Network.PlayerListPacket(References.PLAYER_LIST));
 			// Update state
 			logger.info("Change State to hosting.");
@@ -60,8 +59,8 @@ public class MultiplayerDungeon extends DungeonDiggerState {
 		} else {		
 			logger.info("We're a client.");
 			References.CLIENT.setTimeout(0);
-			CLIENT_VIEW = new DungeonGenerator();
-			CLIENT_VIEW.initializeDungeon(100, 100);
+			References.CLIENT_VIEW = new DungeonGenerator();
+			References.CLIENT_VIEW.initializeDungeon(100, 100);
 		}
 	}
 }

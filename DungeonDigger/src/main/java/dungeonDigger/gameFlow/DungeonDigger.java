@@ -236,10 +236,10 @@ public class DungeonDigger extends StateBasedGame {
 				try {
 					in = new BufferedReader(new FileReader(f));
 					String line = in.readLine();
-					String str1, str2, str3;
-					float x, y;
+					String str1, str2, str3, lineValue;
+					float x, y, animSpeed = 1;
 					int x1=0, x2=0, y1=0, y2=0;
-					StringBuffer property = new StringBuffer();
+					StringBuffer lineName = new StringBuffer();
 					boolean duplicant = false;
 					
 					if( !line.equalsIgnoreCase("[ABILITY]") ) {
@@ -249,61 +249,63 @@ public class DungeonDigger extends StateBasedGame {
 					
 					// Setup ability object
 					while( (line = in.readLine()) != null ) {
-						property.append(line.substring(1, line.indexOf("]")));
-						if( property.toString().equalsIgnoreCase("NAME") ) { 
-							templater = new Ability(line.substring(line.indexOf("]")+1));
+						lineValue = line.substring(line.indexOf("]")+1);
+						lineName.append(line.substring(1, line.indexOf("]")));
+						if( lineName.toString().equalsIgnoreCase("NAME") ) { 
+							templater = new Ability(lineValue);
 							if( References.ABILITY_TEMPLATES.get(templater.getName()) != null ) {
 								Logger.getAnonymousLogger().info("Duplicant ability template found: " + templater.getName());
 								duplicant = true;
 								break;
 							}
 						}
-						if( property.toString().equalsIgnoreCase("SPRITESHEET") ) { 
-							str1 = line.substring(line.indexOf("]")+1);
+						if( lineName.toString().equalsIgnoreCase("SPRITESHEET") ) { 
+							str1 = lineValue;
 							str2 = str1.substring( str1.lastIndexOf('_')+1, str1.lastIndexOf('x'));
 							str3 = str1.substring(str1.lastIndexOf('x')+1, str1.lastIndexOf('.'));
 							templater.setSpriteSheet( new SpriteSheet(new Image(str1, Color.magenta), Integer.parseInt(str2), Integer.parseInt(str3))); 
 						}
-						if( property.toString().equalsIgnoreCase("ANIMSTARTX") ) { x1 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
-						if( property.toString().equalsIgnoreCase("ANIMSTARTY") ) { y1 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
-						if( property.toString().equalsIgnoreCase("ANIMENDX") ) { x2 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
-						if( property.toString().equalsIgnoreCase("ANIMENDY") ) { y2 = Integer.valueOf(line.substring(line.indexOf(']')+1)); }
-						if( property.toString().equalsIgnoreCase("DAMAGING") ) { templater.setDamaging( Boolean.valueOf(line.substring(line.indexOf("]")+1))); }
-						if( property.toString().equalsIgnoreCase("HITFRAMES") ) { 
-							str1 = line.substring(line.indexOf("]")+1);
+						if( lineName.toString().equalsIgnoreCase("ANIMSTARTX") ) { x1 = Integer.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("ANIMSTARTY") ) { y1 = Integer.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("ANIMENDX") ) { x2 = Integer.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("ANIMENDY") ) { y2 = Integer.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("ANIMSPEED") ) { animSpeed = Float.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("DAMAGING") ) { templater.setDamaging( Boolean.valueOf(lineValue)); }
+						if( lineName.toString().equalsIgnoreCase("HITFRAMES") ) { 
+							str1 = lineValue;
 							str2 = str1.substring( str1.lastIndexOf('_')+1, str1.lastIndexOf('x'));
 							str3 = str1.substring(str1.lastIndexOf('x')+1, str1.lastIndexOf('.'));
 							templater.setHitFrames( new SpriteSheet(new Image(str1, Color.magenta), Integer.parseInt(str2), Integer.parseInt(str3))); 
 						}
-						if( property.toString().equalsIgnoreCase("SPEED") ) { templater.setSpeed( Integer.valueOf(line.substring(line.indexOf("]")+1))); }
-						if( property.toString().equalsIgnoreCase("FRIENDLY") ) { templater.setFriendly( Boolean.valueOf(line.substring(line.indexOf("]")+1))); }
-						if( property.toString().equalsIgnoreCase("MOUSE") ) { templater.setMouse( Boolean.valueOf(line.substring(line.indexOf("]")+1))); }
-						if( property.toString().equalsIgnoreCase("START") ) { 
+						if( lineName.toString().equalsIgnoreCase("SPEED") ) { templater.setSpeed( Integer.valueOf(lineValue)); }
+						if( lineName.toString().equalsIgnoreCase("FRIENDLY") ) { templater.setFriendly( Boolean.valueOf(lineValue)); }
+						if( lineName.toString().equalsIgnoreCase("MOUSE") ) { templater.setMouse( Boolean.valueOf(lineValue)); }
+						if( lineName.toString().equalsIgnoreCase("START") ) { 
 							if( !line.substring(line.indexOf(']')+1, line.indexOf(',')).equalsIgnoreCase("M") ) {
 								x = Float.valueOf(line.substring(line.indexOf(']')+1, line.indexOf(',')));
 								y = Float.valueOf(line.substring(line.indexOf(',')+1));
 								templater.setStartPoint(x, y);
 							}
 						}
-						if( property.toString().equalsIgnoreCase("MIDDLE") ) { 
+						if( lineName.toString().equalsIgnoreCase("MIDDLE") ) { 
 							x = Float.valueOf(line.substring(line.indexOf(']')+1, line.indexOf(',')));
 							y = Float.valueOf(line.substring(line.indexOf(',')+1));
 							templater.setMiddlePoint(x, y); 
 						}
-						if( property.toString().equalsIgnoreCase("END") ) { 
+						if( lineName.toString().equalsIgnoreCase("END") ) { 
 							x = Float.valueOf(line.substring(line.indexOf(']')+1, line.indexOf(',')));
 							y = Float.valueOf(line.substring(line.indexOf(',')+1));
 							templater.setEndPoint(x, y); 
 						}
-						if( property.toString().equalsIgnoreCase("DELIVERY") ) { 
-							String adm =line.substring(line.indexOf(']')+1);
+						if( lineName.toString().equalsIgnoreCase("DELIVERY") ) { 
+							String adm =lineValue;
 							templater.setDeliveryMethod(AbilityDeliveryMethod.valueOf(adm));
 						}
-						property.setLength(0);
+						lineName.setLength(0);
 					}
 					// Create animation from info
 					templater.setAnimation(new Animation(templater.getSpriteSheet(), x1, y1, x2, y2, true, 100, false));
-						
+					templater.getAnimation().setSpeed(animSpeed);	
 					
 					if( !duplicant ) {
 						References.ABILITY_TEMPLATES.put(templater.getName(), templater);

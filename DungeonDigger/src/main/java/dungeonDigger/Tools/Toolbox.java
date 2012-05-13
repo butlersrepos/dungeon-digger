@@ -37,6 +37,16 @@ public class Toolbox {
 	public static Vector2f directionFrom1To2(Vector2f v1, Vector2f v2){
 		return new Vector2f(v2.x - v1.x, v2.y - v1.y);
 	}
+	// These return a Direction object based on the given information
+	public static Direction getCardinalDirection(Line line) {
+		return getCardinalDirection(line.getStart().x, line.getStart().y, line.getEnd().x, line.getEnd().y);
+	}
+	public static Direction getCardinalDirection(Vector2f origin, Vector2f destination) {
+		return getCardinalDirection(origin.x, origin.y, destination.x, destination.y);
+	}
+	public static Direction getCardinalDirection(float xDiff, float yDiff) {
+		return getCardinalDirection(0, 0, xDiff, yDiff);
+	}
 	public static Direction getCardinalDirection(float xOrigin, float yOrigin, float xDestination, float yDestination) {
 		if( xOrigin == xDestination && yOrigin == yDestination ) { return Direction.NONE; }
 		float ETW = Math.signum(xDestination - xOrigin);
@@ -50,12 +60,6 @@ public class Toolbox {
 		else if( ETW < 0 ) { d += "WEST"; }
 		
 		return Direction.valueOf(d);
-	}
-	public static Direction getCardinalDirection(Line line) {
-		return getCardinalDirection(line.getStart().x, line.getStart().y, line.getEnd().x, line.getEnd().y);
-	}
-	public static Direction getCardinalDirection(Vector2f origin, Vector2f destination) {
-		return getCardinalDirection(origin.x, origin.y, destination.x, destination.y);
 	}
 	/** Calculates the point where two lines intersect.
 	 **/

@@ -17,9 +17,10 @@ public class Mob extends Agent {
 	private SpriteSheet sprites;
 	private Animation animation;
 	private Vector2f destination;
-	private int currentHitPoints, maxHitPoints, speed;
+	private int currentHitPoints, maxHitPoints, speed, intelligence = 1;
 	private boolean friendly = false, exists = false, inited = false;
 	private transient float movementVariance = 2f;
+	private transient int aggroRange = 750;
 	public Mob(String name) {
 		this.setName(name);
 	}
@@ -42,31 +43,7 @@ public class Mob extends Agent {
 		
 		animation.update(delta);
 		
-		// Basic stupid zombie movement
-		// Get the signum directions toward the player
-		float xMove = Math.signum(References.myCharacter.getPosition().x - this.getPosition().x);
-		float yMove = Math.signum((References.myCharacter.getPosition().y - (Math.max(0,this.getAnimation().getCurrentFrame().getHeight() - References.myCharacter.getHeight()))) - this.getPosition().y);
-		// Calculate a random magnitude to add (for zombies 0-2)
-		int stepVariance = Math.round((float)Math.random() * movementVariance);
-		// Increase our directional magnitude by that much magnitude, maintaining the directionality
-		xMove += stepVariance * Math.signum(xMove);
-		yMove += stepVariance * Math.signum(yMove);
-		//System.out.println("\n\n\n\n\n\n\nxmove = " + xMove + "\tyMove = " + yMove);
-		
-		int canX = References.CLIENT_VIEW.canMove(Toolbox.getCardinalDirection(xMove, 0), this.getCollisionBox(), Math.abs(xMove));
-		if( canX > 0 ) {
-			this.setPosition(this.getPosition().x + canX*Math.signum(xMove), this.getPosition().y);
-			this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
-					this.getAnimation().getCurrentFrame().getWidth(), 
-					this.getAnimation().getCurrentFrame().getHeight());
-		}
-		int canY = References.CLIENT_VIEW.canMove(Toolbox.getCardinalDirection(0, yMove), this.getCollisionBox(), Math.abs(yMove));
-		if( canY > 0 ) {
-			this.setPosition(this.getPosition().x, this.getPosition().y + canY*Math.signum(yMove));
-			this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
-					this.getAnimation().getCurrentFrame().getWidth(), 
-					this.getAnimation().getCurrentFrame().getHeight());
-		}
+		this.getPosition().add( MobAI.updateMovement(this) );
 		
 		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
 				this.getAnimation().getCurrentFrame().getWidth(), 
@@ -178,5 +155,29 @@ public class Mob extends Agent {
 	
 	public void setExists(boolean b) {
 		this.exists = b;
+	}
+
+	public float getMovementVariance() {
+		return movementVariance;
+	}
+
+	public void setMovementVariance(float movementVariance) {
+		this.movementVariance = movementVariance;
+	}
+
+	public int getAggroRange() {
+		return aggroRange;
+	}
+
+	public void setAggroRange(int aggroRange) {
+		this.aggroRange = aggroRange;
+	}
+
+	public int getIntelligence() {
+		return intelligence;
+	}
+
+	public void setIntelligence(int intelligence) {
+		this.intelligence = intelligence;
 	}
 }

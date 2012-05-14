@@ -53,6 +53,7 @@ public class References {
 	public static QuadCollisionEngine QUAD_COLLISION_MANIFOLD;
 	public static Logger log = Logger.getLogger("REFERENCES");
 	public static DungeonGenerator CLIENT_VIEW;
+	public static boolean PAUSED = false;
 	
 	static {
 		log.setLevel(Level.OFF);		

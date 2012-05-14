@@ -448,7 +448,7 @@ public class DungeonGenerator {
 				
 				// If that's a wall square... no go, we're done here, return the number of steps that
 				// were OKed so far
-				if( this.dungeon[checkY][checkX].getTileLetter('W') ) {
+				if( this.dungeon[checkY][checkX].isTileLetter('W') ) {
 					return goodToGo;
 				}
 			}
@@ -462,7 +462,7 @@ public class DungeonGenerator {
 	private void designateEntranceSquare() {		
 		for(int z = 0; z < Math.min(dungeonHeight, dungeonWidth); z++) {
 			for(int i = 0; i <= z; i++) {
-				if( dungeon[z-i][0+i].getTileLetter('O') ) {
+				if( dungeon[z-i][0+i].isTileLetter('O') ) {
 					dungeon[z-i][0+i].setTileLetter('E');
 					// Set x to column and y to row
 					entrance = new Vector2f(0+i, z-i);

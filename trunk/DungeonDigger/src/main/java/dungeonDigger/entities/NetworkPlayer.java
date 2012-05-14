@@ -257,6 +257,9 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 			case "moveRight":
 				movingRight = true;
 				break;
+			case "pause":
+				References.PAUSED = !References.PAUSED;
+				break;
 			default:
 				References.ABILITY_FACTORY.use(References.SLOT_BINDINGS.get(References.KEY_BINDINGS.get(key)), this);
 				break;

@@ -73,7 +73,7 @@ public class GameSquare extends GameObject {
 	}
 
 	/** @return True if the String parameter is the same. */
-	public boolean getTileLetter(char s) {
+	public boolean isTileLetter(char s) {
 		return tileLetter == s;
 	}
 

@@ -163,6 +163,7 @@ public class DungeonDigger extends StateBasedGame {
 
 	public static void loadSettings() {
 		// Setup standard keyBindings
+		References.KEY_BINDINGS.put(Keyboard.KEY_P, 		"pause");
 		References.KEY_BINDINGS.put(Keyboard.KEY_W, 		"moveUp");
 		References.KEY_BINDINGS.put(Keyboard.KEY_S, 		"moveDown");
 		References.KEY_BINDINGS.put(Keyboard.KEY_A, 		"moveLeft");

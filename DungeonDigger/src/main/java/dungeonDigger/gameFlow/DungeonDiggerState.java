@@ -24,9 +24,11 @@ public abstract class DungeonDiggerState extends BasicGameState {
 			case INGAME:	
 			case HOSTINGGAME:
 			case SINGLEPLAYER:
-				References.myCharacter.update(container, delta);		
-				References.ABILITY_FACTORY.update(container, game, delta);
-				References.MOB_FACTORY.update(container, game, delta);
+				if( !References.PAUSED ) {
+					References.myCharacter.update(container, delta);	
+					References.ABILITY_FACTORY.update(container, game, delta);
+					References.MOB_FACTORY.update(container, game, delta);	
+				}
 				break;
 		}
 	}

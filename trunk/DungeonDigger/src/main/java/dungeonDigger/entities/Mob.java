@@ -21,11 +21,15 @@ public class Mob extends Agent {
 	private boolean friendly = false, exists = false, inited = false;
 	private transient float movementVariance = 2f;
 	private transient int aggroRange = 750;
+	private double hunger = 0;
+	
 	public Mob(String name) {
 		this.setName(name);
 	}
 	
 	public void init() {
+		// reset hunger level
+		hunger = 0;
 		animation.setSpeed(0.3f);
 		animation.restart();
 		animation.setLooping(true);
@@ -43,8 +47,8 @@ public class Mob extends Agent {
 		
 		animation.update(delta);
 		
-		this.getPosition().add( MobAI.updateMovement(this) );
 		
+		this.getPosition().add( MobAI.updateMovement(this) );
 		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
 				this.getAnimation().getCurrentFrame().getWidth(), 
 				this.getAnimation().getCurrentFrame().getHeight());

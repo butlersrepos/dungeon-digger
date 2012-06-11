@@ -41,8 +41,11 @@ public class MobAI {
 			// Get the signum directions toward the player
 			float xMove = Math.signum(References.myCharacter.getPosition().x - thinker.getPosition().x);
 			float yMove = Math.signum((References.myCharacter.getPosition().y - (Math.max(0,thinker.getAnimation().getCurrentFrame().getHeight() - References.myCharacter.getHeight()))) - thinker.getPosition().y);
-			// Calculate a random magnitude to add (for zombies 0-2)
+			// Calculate a random magnitude to add (for zombies 0-2 base PLUS their hunger factor)
 			int stepVariance = Math.round((float)Math.random() * thinker.getMovementVariance());
+			if( thinker.getTemplates().contains("zombie") ) {
+				// TODO: - stepVariance += thinker.getHungerFactor().get("MOVEMENT");
+			}
 			// Increase our directional magnitude by that much magnitude, maintaining the directionality
 			xMove += stepVariance * Math.signum(xMove);
 			yMove += stepVariance * Math.signum(yMove);

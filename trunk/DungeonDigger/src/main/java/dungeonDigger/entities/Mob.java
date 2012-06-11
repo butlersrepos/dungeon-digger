@@ -21,7 +21,9 @@ public class Mob extends Agent {
 	private boolean friendly = false, exists = false, inited = false;
 	private transient float movementVariance = 2f;
 	private transient int aggroRange = 750;
-	private double hunger = 0;
+	// Out of 1000 being 100%
+	private int hunger = 0;
+	private transient int hungerTimer = 0;
 	
 	public Mob(String name) {
 		this.setName(name);
@@ -29,7 +31,7 @@ public class Mob extends Agent {
 	
 	public void init() {
 		// reset hunger level
-		hunger = 0;
+		setHunger(0);
 		animation.setSpeed(0.3f);
 		animation.restart();
 		animation.setLooping(true);
@@ -44,6 +46,11 @@ public class Mob extends Agent {
 	public void update(GameContainer c, int delta) {
 		if( !exists() ) { return; }
 		if( !inited ) { init(); }
+		hungerTimer += delta;
+		if( hungerTimer > 1000 ) {
+			hungerTimer = 0;
+			hunger = hunger >= 1000 ? 1000 : hunger + 1;
+		}
 		
 		animation.update(delta);
 		
@@ -183,5 +190,21 @@ public class Mob extends Agent {
 
 	public void setIntelligence(int intelligence) {
 		this.intelligence = intelligence;
+	}
+
+	public void setHunger(int hunger) {
+		this.hunger = hunger;
+	}
+
+	public int getHunger() {
+		return hunger;
+	}
+	// TODO: make stats into objects? return a map of the bonuses the zombie gets at that level of hunger, spd, str, etc.
+	public Map<Stats> getHungerFactor() {
+		double factor = 0;
+		switch(hunger) {
+		
+		}
+		return factor;
 	}
 }

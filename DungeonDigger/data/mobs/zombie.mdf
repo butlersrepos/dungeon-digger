@@ -8,3 +8,6 @@
 [SPEED]1
 [FRIENDLY]false
 [HITPOINTS]45
+[TYPE]Zombie
+[RACE]Human
+[CLASS]Fighter

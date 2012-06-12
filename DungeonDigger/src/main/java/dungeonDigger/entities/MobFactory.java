@@ -13,7 +13,6 @@ import org.newdawn.slick.state.StateBasedGame;
 import dungeonDigger.Tools.References;
 import dungeonDigger.collisions.QuadCollisionEngine;
 import dungeonDigger.contentGeneration.DungeonGenerator;
-import dungeonDigger.gameFlow.DungeonDigger;
 
 public class MobFactory {
 	private static HashMap<String, Vector<Mob>> theCryoTubes = new HashMap<>();

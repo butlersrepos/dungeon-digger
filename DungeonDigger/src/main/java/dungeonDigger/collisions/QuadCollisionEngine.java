@@ -24,7 +24,6 @@ public class QuadCollisionEngine {
 	private static QuadCollisionEngine 		NODE_ZERO	= null;
 	
 	public static void initiateNodeZero(Object[][] obj) {
-		References.log.setLevel(Level.OFF);
 		int w = obj[0].length, h = 0;
 		for(int row = 0; row < obj.length; row++) {
 			if( obj[row].length != w ) {

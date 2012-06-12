@@ -55,7 +55,6 @@ getStats
 		TypeTemplate
 		RacialTemplate
 		ClassTemplate
-			combat
 				TTemplate -> onHit effects, modified stats, some skills
 				RTemplate -> hitbox, base stats	
 				CTemplate -> skills available, skill bonuses
@@ -64,16 +63,16 @@ getStats
 				RTemplate -> base sounds
 				CTemplate -> words if applicable, outlook of phrases
 			movement
-				RTemplate -> base movement
 				TTemplate -> modifies
+				RTemplate -> base movement
 				CTemplate -> can modify, skills that can grant movement
 			skills
-				RTemplate -> racial skills? meh
 				TTemplate -> special abilities, drink blood, regen etc.
+				RTemplate -> racial skills? meh
 				CTemplate -> majority of skillset
 			appearance
-				RTemplate -> base sprite
 				TTemplate -> color swap, effects around key-points
+				RTemplate -> base sprite
 				CTemplate -> equipment
 	
 	

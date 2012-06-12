@@ -1,5 +1,8 @@
 package dungeonDigger.entities;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
@@ -8,6 +11,7 @@ import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.geom.ShapeRenderer;
 import org.newdawn.slick.geom.Vector2f;
 
+import dungeonDigger.Enums.CreatureStat;
 import dungeonDigger.Enums.Direction;
 import dungeonDigger.Tools.References;
 import dungeonDigger.Tools.Toolbox;
@@ -200,11 +204,24 @@ public class Mob extends Agent {
 		return hunger;
 	}
 	// TODO: make stats into objects? return a map of the bonuses the zombie gets at that level of hunger, spd, str, etc.
-	public Map<Stats> getHungerFactor() {
-		double factor = 0;
-		switch(hunger) {
-		
+	public Map<CreatureStat, Double> getStats() {
+		HashMap<CreatureStat, Double> factors = new HashMap<CreatureStat, Double>();
+		/* NOTES on Hunger Chart
+		 * 
+		 */
+		if( hunger == 100 ) {
+			
+		} else if( hunger > 90 ) {
+			
+		} else if( hunger > 75 ) {
+			
+		} else if( hunger > 50 ) {
+			
+		} else if( hunger > 25 ) {
+			
+		} else {
+			
 		}
-		return factor;
+		return factors;
 	}
 }

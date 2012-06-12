@@ -56,7 +56,7 @@ public class References {
 	public static boolean PAUSED = false;
 	
 	static {
-		log.setLevel(Level.OFF);		
+		log.setLevel(Level.ALL);
 	}
 	
 	public static ArrayList<GameObject> getAllEntites() {

@@ -25,6 +25,7 @@ import dungeonDigger.Tools.References;
 import dungeonDigger.entities.Ability;
 import dungeonDigger.entities.Mob;
 import dungeonDigger.entities.NetworkPlayer;
+import dungeonDigger.entities.templates.TypeTemplate;
 import dungeonDigger.network.ConnectionState;
 
 /**
@@ -383,6 +384,21 @@ public class DungeonDigger extends StateBasedGame {
 						if( property.toString().equalsIgnoreCase("HITPOINTS") ) { 
 							templater.setMaxHitPoints( Integer.valueOf(line.substring(line.indexOf("]")+1))); 
 							templater.setCurrentHitPoints( Integer.valueOf(line.substring(line.indexOf("]")+1))); 
+						}
+						if( property.toString().equalsIgnoreCase("TYPE") ) { 
+							try {
+								String type = line.substring(line.indexOf("]")+1);
+								type = type.toLowerCase();
+								type = type.replaceFirst(type.substring(0, 1), type.substring(0, 1).toUpperCase());
+								Class template = Class.forName("dungeonDigger.entities.templates."+type+"Template");
+								templater.setTypeTemplate((TypeTemplate)template.newInstance(), false);
+							} catch(ClassNotFoundException e) {
+								e.printStackTrace();
+							} catch( InstantiationException e ) {
+								e.printStackTrace();
+							} catch( IllegalAccessException e ) {
+								e.printStackTrace();
+							}
 						}
 						property.setLength(0);
 					}

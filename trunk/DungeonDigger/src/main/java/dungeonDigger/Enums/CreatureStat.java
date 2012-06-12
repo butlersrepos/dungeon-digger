@@ -6,5 +6,6 @@ public enum CreatureStat {
 	CONSTITUTION,
 	INTELLIGENCE,
 	CHARISMA,
-	WISDOM;
+	WISDOM,
+	MOVEMENT;
 }

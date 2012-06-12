@@ -20,25 +20,22 @@ import dungeonDigger.contentGeneration.DungeonGenerator;
 public class Mob extends Agent {
 	private SpriteSheet sprites;
 	private Animation animation;
-	private Vector2f destination;
+	private Vector2f destination;	
 	private int currentHitPoints, maxHitPoints, speed, intelligence = 1;
 	private boolean friendly = false, exists = false, inited = false;
 	private transient float movementVariance = 2f;
 	private transient int aggroRange = 750;
-	// Out of 1000 being 100%
-	private int hunger = 0;
-	private transient int hungerTimer = 0;
 	
 	public Mob(String name) {
 		this.setName(name);
 	}
 	
-	public void init() {
-		// reset hunger level
-		setHunger(0);
+	public void init() {		
+		// Setup Animation
 		animation.setSpeed(0.3f);
 		animation.restart();
 		animation.setLooping(true);
+		// Configure collision box based on graphic
 		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
 				this.getAnimation().getCurrentFrame().getWidth(), 
 				this.getAnimation().getCurrentFrame().getHeight());
@@ -50,14 +47,8 @@ public class Mob extends Agent {
 	public void update(GameContainer c, int delta) {
 		if( !exists() ) { return; }
 		if( !inited ) { init(); }
-		hungerTimer += delta;
-		if( hungerTimer > 1000 ) {
-			hungerTimer = 0;
-			hunger = hunger >= 1000 ? 1000 : hunger + 1;
-		}
 		
 		animation.update(delta);
-		
 		
 		this.getPosition().add( MobAI.updateMovement(this) );
 		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
@@ -106,6 +97,7 @@ public class Mob extends Agent {
 		m.setCurrentHitPoints(this.maxHitPoints);
 		m.setSpeed(this.speed);
 		m.setSprites(this.sprites);
+		// TODO: copy the rest.
 		return m;
 	}
 	
@@ -196,32 +188,10 @@ public class Mob extends Agent {
 		this.intelligence = intelligence;
 	}
 
-	public void setHunger(int hunger) {
-		this.hunger = hunger;
-	}
-
-	public int getHunger() {
-		return hunger;
-	}
 	// TODO: make stats into objects? return a map of the bonuses the zombie gets at that level of hunger, spd, str, etc.
-	public Map<CreatureStat, Double> getStats() {
-		HashMap<CreatureStat, Double> factors = new HashMap<CreatureStat, Double>();
-		/* NOTES on Hunger Chart
-		 * 
-		 */
-		if( hunger == 100 ) {
-			
-		} else if( hunger > 90 ) {
-			
-		} else if( hunger > 75 ) {
-			
-		} else if( hunger > 50 ) {
-			
-		} else if( hunger > 25 ) {
-			
-		} else {
-			
-		}
-		return factors;
+	public Map<CreatureStat, Double> getBasicStats() {
+		HashMap<CreatureStat, Double> stats = new HashMap<CreatureStat, Double>();
+
+		return stats;
 	}
 }

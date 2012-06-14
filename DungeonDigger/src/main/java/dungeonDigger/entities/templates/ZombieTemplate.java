@@ -1,7 +1,5 @@
 package dungeonDigger.entities.templates;
 
-import java.util.logging.Level;
-
 import dungeonDigger.Enums.CreatureStat;
 import dungeonDigger.Tools.References;
 import dungeonDigger.entities.Agent;

@@ -17,7 +17,11 @@ import dungeonDigger.Tools.References;
 import dungeonDigger.Tools.Toolbox;
 import dungeonDigger.collisions.QuadCollisionEngine;
 import dungeonDigger.gameFlow.MultiplayerDungeon;
-
+/**
+ * This class should handle all abilities, their animations, movement, collisions, and life-cycle.
+ * Abilities should include all spells, skills, etc as well.
+ * @author erbutler
+ */
 public class Ability extends GameObject {
 	public static Ability EMPTY_ABILITY = new Ability("Empty") {
 		@Override
@@ -30,8 +34,9 @@ public class Ability extends GameObject {
 	private SpriteSheet spriteSheet, hitFrames;
 	private Animation animation;
 	private Agent owner;
-	private Vector2f startPoint = new Vector2f(), middlePoint, endPoint;
 	private int speed;
+	private Vector2f startPoint = new Vector2f(), middlePoint, endPoint;
+	private Float lineOfTravel = null;
 	private AbilityDeliveryMethod adm;
 	transient double distance = -1;
 	transient double intervals = 0;
@@ -81,6 +86,7 @@ public class Ability extends GameObject {
 			References.log.fine("<==ABILITY==> Animation stopped.");
 			active = false; 
 			inited = false;
+			lineOfTravel = null;
 		}
 	}
 	
@@ -89,7 +95,7 @@ public class Ability extends GameObject {
 		Input inputs = container.getInput();
 		if( !active ) { 
 			if( waitForClick ) {
-				// draw aimer thingy, spinning
+				// Draw aimer thingy, spinning
 				References.IMAGES.get("magicReticle").setRotation( References.IMAGES.get("magicReticle").getRotation() + 5 );
 				References.IMAGES.get("magicReticle").draw(
 						References.myCharacter.getPosition().x - container.getWidth()/2 + inputs.getMouseX() - References.IMAGES.get("magicReticle").getWidth()/2, 
@@ -97,6 +103,13 @@ public class Ability extends GameObject {
 			}
 			return; 
 		}
+		// Angle the spell based on the directionality of the cast
+		if( lineOfTravel == null ) {
+			lineOfTravel = (float) Math.toDegrees( Math.atan2( this.getEndPoint().getY()-this.getPosition().getY(), this.getEndPoint().getX()-this.getPosition().getX() ) );
+		}
+		animation.getCurrentFrame().setRotation( lineOfTravel );
+		//System.out.println("ABILITY ANGLED TO: " + lineOfTravel );
+		
 		animation.draw(this.getPosition().x - animation.getWidth()/2, this.getPosition().y - animation.getHeight()/2);
 	}
 	
@@ -111,7 +124,7 @@ public class Ability extends GameObject {
 			}
 			return;
 		}
-		// This means we are jsut starting
+		// This means we are just starting
 		if( distance == -1 ) { 
 			References.log.fine("Setting up pathing items");
 			distance = Toolbox.distanceBetween(startPoint, endPoint); 
@@ -260,6 +273,14 @@ public class Ability extends GameObject {
 	
 	public void setDeliveryMethod(AbilityDeliveryMethod adm) { this.adm = adm; }
 	public AbilityDeliveryMethod getDeliveryMethod() { return this.adm; }
+
+	public float getLineOfTravel() {
+		return lineOfTravel;
+	}
+
+	public void setLineOfTravel(float lineOfTravel) {
+		this.lineOfTravel = lineOfTravel;
+	}
 
 	public boolean isWaitingForClick() { return waitForClick; }
 	public void setWaitingForClick( boolean b ) { waitForClick = b; }

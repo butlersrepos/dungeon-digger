@@ -37,17 +37,45 @@ public class Toolbox {
 	public static Vector2f directionFrom1To2(Vector2f v1, Vector2f v2){
 		return new Vector2f(v2.x - v1.x, v2.y - v1.y);
 	}
-	// These return a Direction object based on the given information
-	public static Direction getCardinalDirection(Line line) {
-		return getCardinalDirection(line.getStart().x, line.getStart().y, line.getEnd().x, line.getEnd().y);
+	/**
+	 *  This return a Direction object based on the given information
+	 * @param line The line to evaluate
+	 * @param toleranceArray Array of the form - [North Tolerance, East Tolerance, South Tolerance, West Tolerance] measured in whole pixels
+	 * @return A Direction relating to the cardinal direction of the given line, within the tolerances
+	 */
+	public static Direction getCardinalDirection(Line line, int... toleranceArray) {
+		return getCardinalDirection(line.getStart().x, line.getStart().y, line.getEnd().x, line.getEnd().y, toleranceArray);
 	}
-	public static Direction getCardinalDirection(Vector2f origin, Vector2f destination) {
-		return getCardinalDirection(origin.x, origin.y, destination.x, destination.y);
+	/**
+	 * This return a Direction object based on the given information
+	 * @param origin
+	 * @param destination
+	 * @param toleranceArray Array of the form - [North Tolerance, East Tolerance, South Tolerance, West Tolerance] measured in whole pixels
+	 * @return
+	 */
+	public static Direction getCardinalDirection(Vector2f origin, Vector2f destination, int... toleranceArray) {
+		return getCardinalDirection(origin.x, origin.y, destination.x, destination.y, toleranceArray);
 	}
-	public static Direction getCardinalDirection(float xDiff, float yDiff) {
-		return getCardinalDirection(0, 0, xDiff, yDiff);
+	/**
+	 * This return a Direction object based on the given information
+	 * @param xDiff
+	 * @param yDiff
+	 * @param toleranceArray Array of the form - [North Tolerance, East Tolerance, South Tolerance, West Tolerance] measured in whole pixels
+	 * @return
+	 */
+	public static Direction getCardinalDirection(float xDiff, float yDiff, int... toleranceArray) {
+		return getCardinalDirection(0, 0, xDiff, yDiff, toleranceArray);
 	}
-	public static Direction getCardinalDirection(float xOrigin, float yOrigin, float xDestination, float yDestination) {
+	/**
+	 * This return a Direction object based on the given information
+	 * @param xOrigin
+	 * @param yOrigin
+	 * @param xDestination
+	 * @param yDestination
+	 * @param toleranceArray Array of the form - [North Tolerance, East Tolerance, South Tolerance, West Tolerance] measured in whole pixels
+	 * @return
+	 */
+	public static Direction getCardinalDirection(float xOrigin, float yOrigin, float xDestination, float yDestination, int... toleranceArray) {
 		if( xOrigin == xDestination && yOrigin == yDestination ) { return Direction.NONE; }
 		float ETW = Math.signum(xDestination - xOrigin);
 		float NTS = Math.signum(yDestination - yOrigin);

@@ -10,10 +10,12 @@ import java.util.logging.Logger;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.geom.Rectangle;
+import org.newdawn.slick.geom.ShapeRenderer;
 import org.newdawn.slick.geom.Vector2f;
 
 import dungeonDigger.Enums.BorderCheck;
 import dungeonDigger.Enums.Direction;
+import dungeonDigger.Tools.Constants;
 import dungeonDigger.Tools.References;
 import dungeonDigger.entities.NetworkPlayer;
 import dungeonDigger.network.Network;
@@ -40,6 +42,9 @@ public class DungeonGenerator {
 			room1.setRoomID(1);
 			room1.setWidth(3);
 			room1.setHeight(3);
+			room1.setLayout(new boolean[][]{ {true, true, true},
+							  				 {true, true, true},
+							  				 {true, true, true} });
 			roomDefinitionMap.put(room1.getRoomID(), room1);
 			
 			Room room2 = new Room();
@@ -47,6 +52,11 @@ public class DungeonGenerator {
 			room2.setRoomID(2);
 			room2.setWidth(5);
 			room2.setHeight(5);
+			room2.setLayout(new boolean[][]{ {true, true, true, true, true},
+							  				 {true, true, true, true, true},
+							  				 {true, true, true, true, true},
+							  				 {true, true, true, true, true},
+							  				 {true, true, true, true, true} });
 			roomDefinitionMap.put(room2.getRoomID(), room2);
 		}
 	}
@@ -480,6 +490,29 @@ public class DungeonGenerator {
 			if( room.getRow() > (0.75) * dungeonHeight && room.getColumn() > (0.75) * dungeonWidth ) {				
 				dungeon[room.getRow() + room.getHeight()/2][room.getColumn() + room.getWidth()/2].setTileLetter('X');
 				found = true;
+			}
+		}
+	}
+	
+	public void populateWithZombies() {
+		int randX, randY, zombies = 0;
+		for( Room r : this.roomList ) {
+			ArrayList<Vector2f> spawns = new ArrayList<Vector2f>();
+			if( r.getWidth() * r.getHeight() >= 16) {
+				zombies = 4;
+			} else {
+				zombies = 2;
+			}
+			// Make a random tile within the room (relative to it's 0,0 top left)
+			for( int z = 0; z < zombies; z++ ) {
+				do {
+					randX = new Random().nextInt( r.getWidth() );
+					randY = new Random().nextInt( r.getHeight() );
+					// Check if it was picked already
+				} while( spawns.contains( new Vector2f(randX, randY)) );
+				
+				// Crazy conversion done to go from relative tile numbers to pixels on the map
+				References.MOB_FACTORY.spawn("zombie", new Vector2f(r.getColumn()*this.dungeonWidth+(randX * this.dungeonWidth), r.getRow()*this.dungeonWidth+(randY*this.dungeonWidth)) );
 			}
 		}
 	}

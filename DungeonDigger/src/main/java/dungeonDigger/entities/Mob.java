@@ -79,6 +79,10 @@ public class Mob extends Agent {
 		return this.animation.getCurrentFrame().getHeight();
 	}
 	
+	/**
+	 * Spawns this mob at the position (in pixels)
+	 * @param pos
+	 */
 	public void spawn(Vector2f pos) {
 		this.setPosition(pos.copy());
 		setExists(true);

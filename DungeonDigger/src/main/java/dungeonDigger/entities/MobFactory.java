@@ -56,6 +56,14 @@ public class MobFactory {
 		}
 	}
 	
+	/**
+	 * Spawns the named mob in the exact position (in pixels). If there is an unused mob in
+	 * memory (cryotubes), then the first one is reactivated and used, otherwise a new mob object
+	 * is created and placed in the world.
+	 * @param mobName Examples: 'zombie'
+	 * @param pos Exact position of the mob's upper-left corner of hitbox, in pixels.
+	 * @return
+	 */
 	public Mob spawn(String mobName, Vector2f pos) {
 		if( mobName.equals("empty") ) { return null; }
 		for( Mob m : theCryoTubes.get(mobName) ) {
@@ -67,7 +75,7 @@ public class MobFactory {
 				return m;
 			}
 		}
-		References.log.info("No cached mob found, creating a " + mobName);
+		References.log.info("No cached mob found, creating a " + mobName + " at position: " + pos.x + ", " + pos.y);
 		Mob b = References.MOB_TEMPLATES.get(mobName).clone();
 		b.spawn(pos);
 		roamingMobs.get(mobName).add(b);	

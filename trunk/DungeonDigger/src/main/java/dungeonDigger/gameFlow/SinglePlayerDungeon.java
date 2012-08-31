@@ -36,6 +36,7 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 		System.out.println(System.currentTimeMillis() + " - Initiating the Quad Collision Manifold!");
 		QuadCollisionEngine.initiateNodeZero(References.CLIENT_VIEW.dungeon);
 		System.out.println(System.currentTimeMillis() + " - Quad Collision Manifold successfully initiated!");
+		References.CLIENT_VIEW.populateWithZombies();
 	}
 	
 	@Override

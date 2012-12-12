@@ -1,6 +1,12 @@
 package dungeonDigger.collisions;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.logging.Level;
 
@@ -39,12 +45,13 @@ public class QuadCollisionEngine {
 	public static void relocate(GameObject obj) {
 		QuadCollisionEngine newParent = null, objParent = obj.getParentNode();
 		if( !NODE_ZERO.contains(obj) ) {
-			References.log.severe("QUADCOLLISIONENGINE::RELOCATE - GameObject("+obj.toString()+") was not found within NODE_ZERO's area. Cannot relocate.");
+			References.log.severe("QUADCOLLISIONENGINE::RELOCATE - GameObject("+obj.toString()+") was not found within NODE_ZERO's area. Cannot relocate." +
+					"\nObject was located at " + obj.getPosition().toString());
 			obj.setParentNode(null);
 		}
 		loopStop = 0;
 		newParent = findResponsibleParent(obj, NODE_ZERO);
-		objParent.populateMe();
+		if( objParent != null ) { objParent.populateMe(); }
 		obj.setParentNode(null);
 		newParent.populateMe();
 	}
@@ -126,7 +133,7 @@ public class QuadCollisionEngine {
 		this.responsibleHeight = h;
 		this.breakingPoint = Constants.N_PER_LEAF;
 		this.tier = tier;
-		//References.log.finer("Tier " + this.tier + " Node: My range is X: " + x + " - " + w + " and Y: " + y + " - " + h);
+		References.log.finer("Tier " + this.tier + " Node: My range is X: " + x + " - " + w + " and Y: " + y + " - " + h);
 		this.populateMe();
 	}
 
@@ -172,7 +179,7 @@ public class QuadCollisionEngine {
 				counter++;
 				temp.add(obj);
 				if( counter > this.breakingPoint && !populatedKids) {
-					if( isSplit ) {
+					if( this.isSplit ) {
 						for( QuadCollisionEngine q : this.getChildren() ) {
 							q.populateMe();
 						}
@@ -196,6 +203,46 @@ public class QuadCollisionEngine {
 		References.log.fine("Tier " + this.tier + " Node: I have " + temp.size() + " items to track!");
 		this.list.addAll(temp);
 		return list;
+	}
+	
+	public static void outputTreeToFile() {
+		File file = new File("QuadTreeMap");
+		BufferedWriter out;
+		int counter = 1;
+		while( file.exists() ) {
+			file = new File("QuadTreeMap"+counter);
+			counter++;
+		}
+		try {
+			file.createNewFile();
+			out = new BufferedWriter( new FileWriter(file) );
+			Calendar now = Calendar.getInstance();
+			out.write("Quad Tree Map - " + now.get(Calendar.HOUR) + ":" + now.get(Calendar.MINUTE) + now.get(Calendar.AM_PM) + " " + now.get(Calendar.MONTH) + "-" + now.get(Calendar.DAY_OF_MONTH) + "-" + now.get(Calendar.YEAR));
+			out.newLine();
+			out.write(References.getAllEntites().size() + " total entities in game.");out.newLine();
+			QuadCollisionEngine.NODE_ZERO.outputBranchToFile(out);
+			out.close();
+			System.out.println("Tree Map Fle created.");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void outputBranchToFile( BufferedWriter out ) {
+		try {
+			String tabs = "";
+			for( int i = 0; i < this.getTier(); i++ ) {
+				tabs += "  ";
+			}
+			out.write( tabs + this.getTier() + ": Node reporting in - I control " + this.responsibleX + ", " + this.responsibleY + " to " + (this.responsibleX+this.responsibleWidth) + ", " + (this.responsibleY+this.responsibleHeight) + " and I have " + this.getList().size() + " objects.");
+			out.newLine();
+			out.flush();
+			for( QuadCollisionEngine q : this.getChildren() ) {
+				q.outputBranchToFile(out);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public boolean contains(GameObject obj) {

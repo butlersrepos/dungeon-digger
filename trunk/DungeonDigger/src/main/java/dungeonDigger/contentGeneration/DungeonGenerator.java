@@ -495,7 +495,8 @@ public class DungeonGenerator {
 	}
 	
 	public void populateWithZombies() {
-		int randX, randY, zombies = 0;
+		final int maxZ = 40;
+		int randX, randY, zombies = 0, totalZ = 0;
 		for( Room r : this.roomList ) {
 			ArrayList<Vector2f> spawns = new ArrayList<Vector2f>();
 			if( r.getWidth() * r.getHeight() >= 16) {
@@ -512,7 +513,13 @@ public class DungeonGenerator {
 				} while( spawns.contains( new Vector2f(randX, randY)) );
 				
 				// Crazy conversion done to go from relative tile numbers to pixels on the map
-				References.MOB_FACTORY.spawn("zombie", new Vector2f(r.getColumn()*this.dungeonWidth+(randX * this.dungeonWidth), r.getRow()*this.dungeonWidth+(randY*this.dungeonWidth)) );
+				References.MOB_FACTORY.spawn("zombie", new Vector2f( (r.getColumn()+randX) * this.ratioCol, (r.getRow()+randY)*this.ratioRow ) );
+				totalZ++;
+				if( totalZ >= maxZ ) { break; }
+			}
+			if( totalZ >= maxZ ) { 
+				System.out.println(totalZ + " zombies in.");
+				break; 
 			}
 		}
 	}

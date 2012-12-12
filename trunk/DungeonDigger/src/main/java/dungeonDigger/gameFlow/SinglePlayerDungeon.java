@@ -14,7 +14,7 @@ import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.entities.NetworkPlayer;
 
 public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListener, MouseListener {
-	private boolean gen1Toggled, gen2Toggled, zToggled;
+	private boolean gen1Toggled, gen2Toggled, zToggled, tToggled;
 	private double[] hallsDensity = new double[]{1d, 0.95d};
 	private NetworkPlayer myPlayer;
 
@@ -37,6 +37,7 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 		QuadCollisionEngine.initiateNodeZero(References.CLIENT_VIEW.dungeon);
 		System.out.println(System.currentTimeMillis() + " - Quad Collision Manifold successfully initiated!");
 		References.CLIENT_VIEW.populateWithZombies();
+		System.out.println(System.currentTimeMillis() + " - Zombies populated!");
 	}
 	
 	@Override
@@ -53,17 +54,26 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 				gen1Toggled = true;
 			}
 		} else { gen1Toggled = false; }
+		
 		if( inputs.isKeyDown(Keyboard.KEY_0) ) {
 			if( !gen2Toggled ) {
 				References.CLIENT_VIEW.generateDungeon2(99, 99, 50000, 4, 0.45, true);
 				gen2Toggled = true;
 			}
 		} else { gen2Toggled = false; }
+		
 		if( inputs.isKeyDown(Keyboard.KEY_Z) && !zToggled ) {
 			References.MOB_FACTORY.spawn("zombie", myPlayer.getPosition());
 			zToggled = true;
 		} else {
 			zToggled = false;
+		}
+		
+		if( inputs.isKeyDown(Keyboard.KEY_T) && !tToggled ) {
+			QuadCollisionEngine.outputTreeToFile();
+			tToggled = true;
+		} else {
+			tToggled = false;
 		}
 	}
 	

@@ -15,6 +15,7 @@ import dungeonDigger.Enums.CreatureStat;
 import dungeonDigger.Enums.Direction;
 import dungeonDigger.Tools.References;
 import dungeonDigger.Tools.Toolbox;
+import dungeonDigger.collisions.QuadCollisionEngine;
 import dungeonDigger.contentGeneration.DungeonGenerator;
 
 public class Mob extends Agent {
@@ -46,11 +47,14 @@ public class Mob extends Agent {
 	@Override
 	public void update(GameContainer c, int delta) {
 		if( !exists() ) { return; }
-		if( !inited ) { init(); }
+		if( !inited ) { this.init(); }
 		
 		animation.update(delta);
 		
 		this.getPosition().add( MobAI.updateMovement(this) );
+		if( this.getParentNode() == null || !this.getParentNode().contains(this) ) {
+			QuadCollisionEngine.relocate(this);
+		}
 		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
 				this.getAnimation().getCurrentFrame().getWidth(), 
 				this.getAnimation().getCurrentFrame().getHeight());

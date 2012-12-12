@@ -68,14 +68,14 @@ public class MobFactory {
 		if( mobName.equals("empty") ) { return null; }
 		for( Mob m : theCryoTubes.get(mobName) ) {
 			if( !m.exists() ) {
-				References.log.info("Found mob: " + m.getName() + " and spawning it.");
+				//References.log.info("Found mob: " + m.getName() + " and spawning it.");
 				m.spawn(pos);
 				roamingMobs.get(mobName).add(m);
 				QuadCollisionEngine.addObjectToGame(m);
 				return m;
 			}
 		}
-		References.log.info("No cached mob found, creating a " + mobName + " at position: " + pos.x + ", " + pos.y);
+		//References.log.info("No cached mob found, creating a " + mobName + " at position: " + pos.x + ", " + pos.y);
 		Mob b = References.MOB_TEMPLATES.get(mobName).clone();
 		b.spawn(pos);
 		roamingMobs.get(mobName).add(b);	

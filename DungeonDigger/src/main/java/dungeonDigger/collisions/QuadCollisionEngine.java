@@ -268,7 +268,7 @@ public class QuadCollisionEngine {
 			return false;
 		} else if( r.getMaxY() > this.responsibleY + this.responsibleHeight ) {
 			return false;
-		} else if( r.getMinY() < this.responsibleX ) {
+		} else if( r.getMinY() < this.responsibleY ) {
 			return false;
 		}
 		return true;

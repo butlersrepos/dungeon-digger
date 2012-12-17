@@ -54,9 +54,21 @@ public abstract class DungeonDiggerState extends BasicGameState {
 				References.CLIENT_VIEW.renderDungeon(container, g);
 				// TODO: render HUD
 				
+				
 				// Undo translation to render moving components (player, HUD)
 				g.translate(References.myCharacter.getPosition().x-container.getWidth()/2, References.myCharacter.getPosition().y-container.getHeight()/2);
+				if( References.DEBUG_MODE ) {
+					drawDebugInfo(g);
+				}
 				break;
 		}
+	}
+	
+	private void drawDebugInfo(Graphics g) {
+		g.drawString("DEBUG MODE ON - Press 'Z' to spawn a zombie.", 50, 400);
+		g.drawString("              - Press 'T' to write the collision trees to file.", 50, 415);
+		g.drawString("              - Press '9' to generate a new dungeon.", 50, 430);
+		g.drawString("              - Press '0' to generate a dungeon using an island algorithm.", 50, 445);
+		g.drawString("              - Press '~' to disable debug.", 50, 460);
 	}
 }

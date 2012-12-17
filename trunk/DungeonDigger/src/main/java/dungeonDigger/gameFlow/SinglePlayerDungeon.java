@@ -1,5 +1,7 @@
 package dungeonDigger.gameFlow;
 
+import java.util.HashMap;
+
 import org.lwjgl.input.Keyboard;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Input;
@@ -14,15 +16,20 @@ import dungeonDigger.contentGeneration.DungeonGenerator;
 import dungeonDigger.entities.NetworkPlayer;
 
 public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListener, MouseListener {
-	private boolean gen1Toggled, gen2Toggled, zToggled, tToggled;
 	private double[] hallsDensity = new double[]{1d, 0.95d};
 	private NetworkPlayer myPlayer;
+	private HashMap<Integer, Boolean> keyToggled = new HashMap<Integer, Boolean>();
 
 	@Override
 	public int getID() { return 1; }
 
 	public void init(GameContainer container, StateBasedGame game) throws SlickException {
 		References.CLIENT_VIEW = new DungeonGenerator();
+		keyToggled.put(Keyboard.KEY_GRAVE, false);
+		keyToggled.put(Keyboard.KEY_T, false);
+		keyToggled.put(Keyboard.KEY_Z, false);
+		keyToggled.put(Keyboard.KEY_9, false);
+		keyToggled.put(Keyboard.KEY_0, false);
 	}
 	
 	@Override
@@ -47,33 +54,40 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 		
 		// 9 & 0 generate a layout
 		// Z spawns a zombie
-		if( inputs.isKeyDown(Keyboard.KEY_9) ) {
-			if( !gen1Toggled ) {
-				References.CLIENT_VIEW.generateDungeon1(99, 99, 0.25, hallsDensity);
-				myPlayer.setPosition( (int)References.CLIENT_VIEW.getEntranceCoords().x, (int)References.CLIENT_VIEW.getEntranceCoords().y );
-				gen1Toggled = true;
-			}
-		} else { gen1Toggled = false; }
-		
-		if( inputs.isKeyDown(Keyboard.KEY_0) ) {
-			if( !gen2Toggled ) {
-				References.CLIENT_VIEW.generateDungeon2(99, 99, 50000, 4, 0.45, true);
-				gen2Toggled = true;
-			}
-		} else { gen2Toggled = false; }
-		
-		if( inputs.isKeyDown(Keyboard.KEY_Z) && !zToggled ) {
-			References.MOB_FACTORY.spawn("zombie", myPlayer.getPosition());
-			zToggled = true;
-		} else {
-			zToggled = false;
+		if( inputs.isKeyDown(Keyboard.KEY_GRAVE) && !keyToggled.get(Keyboard.KEY_GRAVE) ) {
+			References.DEBUG_MODE = !References.DEBUG_MODE;
+			keyToggled.put(Keyboard.KEY_GRAVE, true);
+		} else if( !inputs.isKeyDown(Keyboard.KEY_9) && keyToggled.get(Keyboard.KEY_GRAVE) ) { 
+			keyToggled.put(Keyboard.KEY_GRAVE, false);
 		}
 		
-		if( inputs.isKeyDown(Keyboard.KEY_T) && !tToggled ) {
+		if( inputs.isKeyDown(Keyboard.KEY_9) && !keyToggled.get(Keyboard.KEY_9) ) {
+			References.CLIENT_VIEW.generateDungeon1(99, 99, 0.25, hallsDensity);
+			myPlayer.setPosition( (int)References.CLIENT_VIEW.getEntranceCoords().x, (int)References.CLIENT_VIEW.getEntranceCoords().y );
+			keyToggled.put(Keyboard.KEY_9, true);
+		} else if( !inputs.isKeyDown(Keyboard.KEY_9) && keyToggled.get(Keyboard.KEY_9) ) { 
+			keyToggled.put(Keyboard.KEY_9, false);
+		}
+		
+		if( inputs.isKeyDown(Keyboard.KEY_0) && !keyToggled.get(Keyboard.KEY_0) ) {
+			References.CLIENT_VIEW.generateDungeon2(99, 99, 50000, 4, 0.45, true);
+			keyToggled.put(Keyboard.KEY_0, true);
+		} else if( !inputs.isKeyDown(Keyboard.KEY_0) && keyToggled.get(Keyboard.KEY_0) ) { 
+			keyToggled.put(Keyboard.KEY_0, false);
+		}
+		
+		if( inputs.isKeyDown(Keyboard.KEY_Z) && !keyToggled.get(Keyboard.KEY_Z) ) {
+			References.MOB_FACTORY.spawn("zombie", myPlayer.getPosition());
+			keyToggled.put(Keyboard.KEY_Z, true);
+		} else if( !inputs.isKeyDown(Keyboard.KEY_Z) && keyToggled.get(Keyboard.KEY_Z) ) {
+			keyToggled.put(Keyboard.KEY_Z, false);
+		}
+		
+		if( inputs.isKeyDown(Keyboard.KEY_T) && !keyToggled.get(Keyboard.KEY_T) ) {
 			QuadCollisionEngine.outputTreeToFile();
-			tToggled = true;
-		} else {
-			tToggled = false;
+			keyToggled.put(Keyboard.KEY_T, true);
+		} else if( !inputs.isKeyDown(Keyboard.KEY_T) && keyToggled.get(Keyboard.KEY_T) ) {
+			keyToggled.put(Keyboard.KEY_T, false);
 		}
 	}
 	

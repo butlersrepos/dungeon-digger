@@ -8,6 +8,7 @@ import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
 import dungeonDigger.Tools.References;
+import dungeonDigger.collisions.QuadCollisionEngine;
 
 /** This class facilitates the standard of updating the myCharacter object's logic and
  * rendering the dungeon.<br/>

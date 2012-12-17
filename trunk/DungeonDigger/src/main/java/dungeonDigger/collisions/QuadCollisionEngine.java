@@ -29,7 +29,7 @@ public class QuadCollisionEngine {
 	private boolean							isSplit		= false;
 	private static QuadCollisionEngine 		NODE_ZERO	= null;
 	
-	public static void initiateNodeZero(Object[][] obj) {
+	public static QuadCollisionEngine initiateNodeZero(Object[][] obj) {
 		int w = obj[0].length, h = 0;
 		for(int row = 0; row < obj.length; row++) {
 			if( obj[row].length != w ) {
@@ -40,6 +40,7 @@ public class QuadCollisionEngine {
 		h = obj.length * DungeonGenerator.ratioRow;
 		w = obj[0].length * DungeonGenerator.ratioCol;
 		NODE_ZERO = new QuadCollisionEngine(0,0,w,h, 0);
+		return NODE_ZERO;
 	}
 
 	public static void relocate(GameObject obj) {
@@ -137,6 +138,20 @@ public class QuadCollisionEngine {
 		this.populateMe();
 	}
 
+	public void printTree() {
+		String tabs = "";
+		for( int i = 0; i < this.getTier(); i++ ) {
+			tabs += "\t";
+		}
+		System.out.println(tabs + "Node - " + this.getTier() );
+		for( QuadCollisionEngine q : this.getChildren() ) {
+			q.printTree();
+		}
+		for( GameObject g : this.getList() ) {
+			System.out.println(tabs + "\tObject: " + g.getClass() + " at " + g.getPosition());
+		}
+	}
+	
 	private void quadSplit() {
 		int leftWidth = (int)Math.floor(this.responsibleWidth / 2), 
 			topHeight = (int)Math.floor(this.responsibleHeight / 2), 

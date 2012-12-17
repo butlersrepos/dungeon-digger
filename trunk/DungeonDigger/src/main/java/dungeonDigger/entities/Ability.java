@@ -30,19 +30,15 @@ public class Ability extends GameObject {
 		public void setChanneling(boolean value) { }
 	};
 	private String name;
-	private boolean active, damaging, channeling, friendly, mouse, inited, waitForClick;
+	private boolean active, damaging, channeling, friendly, mouse, inited, waitForClick, collided = false;
 	private SpriteSheet spriteSheet, hitFrames;
-	private Animation animation;
+	private Animation animation, secondaryAnimation;
 	private Agent owner;
-	private int speed;
-	private Vector2f startPoint = new Vector2f(), middlePoint, endPoint;
+	private int speed, step = 0;
+	private Vector2f startPoint = new Vector2f(), middlePoint, endPoint, collisionPoint = null;
 	private Float lineOfTravel = null;
 	private AbilityDeliveryMethod adm;
-	transient double distance = -1;
-	transient double intervals = 0;
-	transient int step = 0;
-	transient Vector2f collisionPoint = null;
-	transient boolean collided = false;
+	transient double distance = -1, intervals = 0;
 	
 	public Ability(String name) { this.name = name; }
 	
@@ -60,6 +56,8 @@ public class Ability extends GameObject {
 		this.getPosition().x = startPoint.x;
 		this.getPosition().y = startPoint.y;
 		animation.restart();
+		if( secondaryAnimation != null ) { secondaryAnimation.restart(); }
+		
 		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
 								this.getAnimation().getCurrentFrame().getWidth(), 
 								this.getAnimation().getCurrentFrame().getHeight());
@@ -76,17 +74,22 @@ public class Ability extends GameObject {
 			return; 
 		}
 		
-		animation.update(delta);
-		this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
-								this.getAnimation().getCurrentFrame().getWidth(), 
-								this.getAnimation().getCurrentFrame().getHeight());
-		calculateMovement();
+		if( collided && secondaryAnimation != null ) {
+			secondaryAnimation.update(delta);
+		} else {
+			animation.update(delta);
+			this.setCollisionBox(this.getPosition().x, this.getPosition().y, 
+					this.getAnimation().getCurrentFrame().getWidth(), 
+					this.getAnimation().getCurrentFrame().getHeight());
+			calculateMovement();
+		}
 		
-		if( this.animation.isStopped() ) { 
-			References.log.fine("<==ABILITY==> Animation stopped.");
+		if( this.animation.isStopped() && (secondaryAnimation == null || secondaryAnimation.isStopped()) ) { 
+			References.log.info("<==ABILITY==> Animation stopped.");
 			active = false; 
 			inited = false;
 			lineOfTravel = null;
+			this.end();
 		}
 	}
 	
@@ -110,26 +113,29 @@ public class Ability extends GameObject {
 		animation.getCurrentFrame().setRotation( lineOfTravel );
 		//System.out.println("ABILITY ANGLED TO: " + lineOfTravel );
 		
-		animation.draw(this.getPosition().x - animation.getWidth()/2, this.getPosition().y - animation.getHeight()/2);
+		if( collided && secondaryAnimation != null ) {
+			secondaryAnimation.draw(this.getPosition().x - secondaryAnimation.getWidth()/2, this.getPosition().y - secondaryAnimation.getHeight()/2);
+		} else {
+			animation.draw(this.getPosition().x - animation.getWidth()/2, this.getPosition().y - animation.getHeight()/2);
+		}
+		
 	}
 	
 	public void calculateMovement() {
 		if( step > intervals ) {
-			References.log.fine("Steps > Intervals, stopping");
+			References.log.info("Steps > Intervals, stopping");
 			distance = -1;
 			step = 0;
 			animation.stop();
-			if( collided ) {
-				// TODO: explosion, secondary animation etc?
-			}
+			collided = true;
 			return;
 		}
 		// This means we are just starting
 		if( distance == -1 ) { 
-			References.log.fine("Setting up pathing items");
+			References.log.info("Setting up pathing items");
 			distance = Toolbox.distanceBetween(startPoint, endPoint); 
 			intervals = distance / speed;
-			References.log.fine("Distance: " + distance + " Intervals: " + intervals);
+			References.log.info("Distance: " + distance + " Intervals: " + intervals);
 			step = 0;
 		}
 		int newX = (int)(startPoint.x + (endPoint.x - startPoint.x) * (step / intervals)); 
@@ -148,19 +154,18 @@ public class Ability extends GameObject {
 						collided = true;
 						break;
 					}
-				}
+				}dddddddddddd
 			}
 			if( collided ) { break; }
 		}*/ 
 		// Move
-		if( collided ) {
-			this.setPosition(this.collisionPoint.copy());
-			collisionPoint = null;
-			step = (int)Math.ceil(intervals);
-		} else {
+		//if( collided ) {
+			//this.setPosition(this.collisionPoint.copy());
+			//step = (int)Math.ceil(intervals);
+		//} else {
 			this.getPosition().x = newX;
 			this.getPosition().y = newY;
-		}
+		//}
 		// Repopulate Quads
 		if( !this.getParentNode().contains(this) || this.getParentNode().getChildren().size() > 0 ) {
 			QuadCollisionEngine.relocate(this);
@@ -175,35 +180,43 @@ public class Ability extends GameObject {
 	}
 	
 	private void handleCollisions( ArrayList<GameObject> objects ) {
-		References.log.fine("<==ABILITY==> Handling collisions with " + objects.size() + " objects.");
+		References.log.info("<==ABILITY==> Handling collisions with " + objects.size() + " objects.");
 		for( GameObject g : objects ) {
 			if( !this.isActive() ) { break; }
 			if( g instanceof Mob ) {
 				Mob m = (Mob)g;
-				References.log.fine("\n\n\n\n\n\n\n\n\n");
-				References.log.fine(this.getName() + " COLLIDED WITH A MOB - " + m.getName());
+				References.log.info("\n\n\n\n\n\n\n\n\n");
+				References.log.info(this.getName() + " COLLIDED WITH A MOB - " + m.getName());
 				if( m.exists() ) { m.die(); }
-				this.end();
+				References.log.info("Setting collided.");
+				this.collided = true;
+				References.log.info("Stopping primary animation.");
+				animation.stop();
+				if( secondaryAnimation != null ) { 
+					References.log.info("Starting secondary animation.");
+					secondaryAnimation.start(); 
+				} else { this.end(); }
 			} else if( g instanceof NetworkPlayer ) {
 				NetworkPlayer p = (NetworkPlayer)g;
-				References.log.fine("\n\n\n\n\n\n\n\n\n");
-				References.log.fine(this.getName() + " COLLIDED WITH A PLAYER - " + p.getName());
+				References.log.info("\n\n\n\n\n\n\n\n\n");
+				References.log.info(this.getName() + " COLLIDED WITH A PLAYER - " + p.getName());
 			} else if( g instanceof Ability ) {
 				Ability a = (Ability)g;
-				References.log.fine("\n\n\n\n\n\n\n\n\n");
-				References.log.fine(this.getName() + " COLLIDED WITH AN ABILITY - " + a.getName());
+				References.log.info("\n\n\n\n\n\n\n\n\n");
+				References.log.info(this.getName() + " COLLIDED WITH AN ABILITY - " + a.getName());
 			}
 		}
 	}
 	
 	public void end() {
-		References.log.fine(this.name + ": I am ending with owner: " + this.owner.getName());
+		References.log.info(this.name + ": I am ending with owner: " + (this.owner != null ? this.owner.getName() : "null"));
 		this.owner = null;
 		this.active = false;
 		this.channeling = false;
 		this.waitForClick = false;
 		this.step = 0;
 		this.distance = -1;
+		this.collided = false;
 	}
 	
 	/* GETTERS AND SETTERS AND BORING STUFF BELOW HERE  */
@@ -285,9 +298,17 @@ public class Ability extends GameObject {
 	public boolean isWaitingForClick() { return waitForClick; }
 	public void setWaitingForClick( boolean b ) { waitForClick = b; }
 	
+	public Animation getSecondaryAnimation() {
+		return secondaryAnimation;
+	}
+
+	public void setSecondaryAnimation(Animation secondaryAnimation) {
+		this.secondaryAnimation = secondaryAnimation;
+	}
+
 	/** Resets the animation frames and takes the first string (if there is one) as the new owner. **/
 	public void reset(Agent owner) {
-		References.log.fine(this.name + ": I am reset with owner: " + owner.getName());
+		References.log.info(this.name + ": I am reset with owner: " + owner.getName());
 		this.owner = owner;
 		this.active = false;
 		this.channeling = true;
@@ -311,6 +332,7 @@ public class Ability extends GameObject {
 		a.spriteSheet = this.spriteSheet;
 		a.hitFrames = this.hitFrames;
 		a.animation = this.animation.copy();
+		a.secondaryAnimation = this.secondaryAnimation.copy();
 		a.owner = this.owner;
 		a.startPoint = this.startPoint != null ? new Vector2f(this.startPoint.x, this.startPoint.y) : null;
 		a.middlePoint = this.middlePoint != null ? new Vector2f(this.middlePoint.x, this.middlePoint.y) : null;

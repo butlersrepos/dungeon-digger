@@ -259,6 +259,8 @@ public class NetworkPlayer extends Agent implements KeyListener, MouseListener {
 				break;
 			case "pause":
 				References.PAUSED = !References.PAUSED;
+				System.out.println("\f");
+				References.QUAD_COLLISION_MANIFOLD.printTree();
 				break;
 			default:
 				References.ABILITY_FACTORY.use(References.SLOT_BINDINGS.get(References.KEY_BINDINGS.get(key)), this);

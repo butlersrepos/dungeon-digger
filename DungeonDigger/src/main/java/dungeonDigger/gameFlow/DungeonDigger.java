@@ -239,8 +239,8 @@ public class DungeonDigger extends StateBasedGame {
 					in = new BufferedReader(new FileReader(f));
 					String line = in.readLine();
 					String str1, str2, str3, lineValue;
-					float x, y, animSpeed = 1;
-					int x1=0, x2=0, y1=0, y2=0;
+					float x, y, animSpeed = 1, sAnimSpeed = 1;
+					int x1=0, x2=0, y1=0, y2=0, sx1=0, sx2=0, sy1=0, sy2=0;
 					StringBuffer lineName = new StringBuffer();
 					boolean duplicant = false;
 					
@@ -253,6 +253,8 @@ public class DungeonDigger extends StateBasedGame {
 					while( (line = in.readLine()) != null ) {
 						lineValue = line.substring(line.indexOf("]")+1);
 						lineName.append(line.substring(1, line.indexOf("]")));
+						
+						
 						if( lineName.toString().equalsIgnoreCase("NAME") ) { 
 							templater = new Ability(lineValue);
 							if( References.ABILITY_TEMPLATES.get(templater.getName()) != null ) {
@@ -272,6 +274,11 @@ public class DungeonDigger extends StateBasedGame {
 						if( lineName.toString().equalsIgnoreCase("ANIMENDX") ) { x2 = Integer.valueOf(lineValue); }
 						if( lineName.toString().equalsIgnoreCase("ANIMENDY") ) { y2 = Integer.valueOf(lineValue); }
 						if( lineName.toString().equalsIgnoreCase("ANIMSPEED") ) { animSpeed = Float.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("SECONDARYANIMSTARTX") ) { sx1 = Integer.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("SECONDARYANIMSTARTY") ) { sy1 = Integer.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("SECONDARYANIMENDX") ) { sx2 = Integer.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("SECONDARYANIMENDY") ) { sy2 = Integer.valueOf(lineValue); }
+						if( lineName.toString().equalsIgnoreCase("SECONDARYANIMSPEED") ) { sAnimSpeed = Float.valueOf(lineValue); }
 						if( lineName.toString().equalsIgnoreCase("DAMAGING") ) { templater.setDamaging( Boolean.valueOf(lineValue)); }
 						if( lineName.toString().equalsIgnoreCase("HITFRAMES") ) { 
 							str1 = lineValue;
@@ -307,7 +314,10 @@ public class DungeonDigger extends StateBasedGame {
 					}
 					// Create animation from info
 					templater.setAnimation(new Animation(templater.getSpriteSheet(), x1, y1, x2, y2, true, 100, false));
+					templater.setSecondaryAnimation(new Animation(templater.getSpriteSheet(), sx1, sy1, sx2, sy2, true, 100, false));
 					templater.getAnimation().setSpeed(animSpeed);	
+					templater.getSecondaryAnimation().setSpeed(sAnimSpeed);	
+					templater.getSecondaryAnimation().setLooping(false);	
 					
 					if( !duplicant ) {
 						References.ABILITY_TEMPLATES.put(templater.getName(), templater);

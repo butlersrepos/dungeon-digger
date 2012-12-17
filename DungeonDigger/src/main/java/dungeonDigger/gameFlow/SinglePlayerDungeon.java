@@ -34,7 +34,7 @@ public class SinglePlayerDungeon extends DungeonDiggerState implements KeyListen
 		References.CLIENT_VIEW.generateDungeon1(99, 99, 0.25, hallsDensity);
 		myPlayer.setPosition( (int)References.CLIENT_VIEW.getEntranceCoords().x, (int)References.CLIENT_VIEW.getEntranceCoords().y );
 		System.out.println(System.currentTimeMillis() + " - Initiating the Quad Collision Manifold!");
-		QuadCollisionEngine.initiateNodeZero(References.CLIENT_VIEW.dungeon);
+		References.QUAD_COLLISION_MANIFOLD = QuadCollisionEngine.initiateNodeZero(References.CLIENT_VIEW.dungeon);
 		System.out.println(System.currentTimeMillis() + " - Quad Collision Manifold successfully initiated!");
 		References.CLIENT_VIEW.populateWithZombies();
 		System.out.println(System.currentTimeMillis() + " - Zombies populated!");
